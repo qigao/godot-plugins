@@ -15,7 +15,7 @@
 5. A script or native consumer can request an **owned** raw-frame snapshot without keeping a Capture callback pointer.
 6. Deactivate, unregister, stop/join and release device resources on shutdown.
 
-The plugin will use **Salts::Capture** as the sole native camera provider. For Android, Java is permitted only for runtime permission/export lifecycle; no Java Camera2 implementation will be added. For Apple targets, Objective-C++ is permitted only for permission/export integration; no second AVFoundation capture pipeline will be added.
+The plugin will use **Salts::Media** as the sole native camera provider. For Android, Java is permitted only for runtime permission/export lifecycle; no Java Camera2 implementation will be added. For Apple targets, Objective-C++ is permitted only for permission/export integration; no second AVFoundation capture pipeline will be added.
 
 ## MVP constraints
 

@@ -7,7 +7,7 @@ Godot integrations built on top of qigao's native C11 libraries.
 [Salts Camera plugin design](docs/SALTS-CAMERA-DESIGN.md) | [Acceptance gates](docs/SALTS-CAMERA-ACCEPTANCE.md) | [Add-on contract](addons/salts_camera/README.md)
 
 The proposed Godot 4 GDExtension provides:
-- `SaltsCameraManager` and `SaltsCameraDevice` to enumerate and configure real cameras through the **installed** `Salts::Capture` SDK.
+- `SaltsCameraManager` and `SaltsCameraDevice` to enumerate and configure real cameras through the **installed** `Salts::Media` SDK.
 - Opt-in `SaltsCameraFeed` for Godot `CameraServer` / `CameraTexture` preview.
 - An opt-in bounded CPU/raw-frame path for processing, without duplicating camera backends.
 

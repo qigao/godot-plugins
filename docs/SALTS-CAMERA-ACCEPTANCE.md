@@ -5,7 +5,7 @@
 ## Source of truth
 
 - Pin an exact SaltsCore SDK release and `godot-cpp` engine-compatible revision. Never treat compilation against `master` as proof of published SDK availability.
-- `capture/release-blockers.json` in salts-core currently has `release_ready=false`. The miniaudio PulseAudio initialization leak, iOS missing-six-symbol compatibility qualification, physical device/permission testing and redistributable dependency closure are **separate** release gates. Plugin build/CI does not override any of them.
+- `media/release-blockers.json` in salts-core currently has `release_ready=false`. The miniaudio PulseAudio initialization leak, iOS missing-six-symbol compatibility qualification, physical device/permission testing and redistributable dependency closure are **separate** release gates. Plugin build/CI does not override any of them.
 - Disallow production duplicate camera drivers, fake cameras or fallback to a different explicit `mode_id`.
 
 ## CI matrix (after implementation)

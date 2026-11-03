@@ -1,7 +1,7 @@
 # Salts Camera: Godot GDExtension design
 
 **Status:** Proposed / not implemented. **Reference capture head:** `qigao/salts-core@c888705263dffbcb93a480e074d8e8d450635645`.
-**Upstream tracking:** [salts-core #197](https://github.com/qigao/salts-core/issues/197). **Reference implementations:** [godot-native-camera](https://github.com/godot-mobile-plugins/godot-native-camera) and [godot-cameraserver-extension](https://github.com/j20001970/godot-cameraserver-extension).
+**Media static migration:** [salts-core #198](https://github.com/qigao/salts-core/pull/198). **Upstream tracking:** [salts-core #197](https://github.com/qigao/salts-core/issues/197). **Reference implementations:** [godot-native-camera](https://github.com/godot-mobile-plugins/godot-native-camera) and [godot-cameraserver-extension](https://github.com/j20001970/godot-cameraserver-extension).
 
 ## Decision and boundaries
 
@@ -14,12 +14,12 @@ Godot scene / CameraTexture / script / raw frame consumer
                      |
             frame mailbox + CPU converter
                      |
-             installed Salts::Capture
+             installed Salts::Media
                      |
  Windows MF | Linux V4L2 | Android NDK Camera2 | Apple AVFoundation
 ```
 
-1. **Only** `qigao/salts-core/capture` owns physical camera devices and native capture. Godot must not implement camera acquisition a second time in Java, Swift or C++.
+1. **Only** `qigao/salts-core/media` owns physical camera devices and native capture. Godot must not implement camera acquisition a second time in Java, Swift or C++.
 2. Plugin is a C++ **GDExtension**, scoped to the Godot consumer; Salts Core stays pure C11 and has **no** Godot dependency. TurboMedia and FlexUI can use Salts Capture independently.
 3. The current `salts_video_capture_cb` is sufficient for M0: the *selected exact mode* is retained with the live device handle, so the callback's `width/height/bytes/timestamp_us` can be interpreted using the selected format. Do **not** mislabel arbitrary buffers as RGBA.
 4. Frame V2 (`struct_size`, planes/stride, colorspace/timebase/rotation) is additive work in upstream issue #197. It is **not** a prerequisite to build the first CPU-based plugin. Native GPU sharing is a separate milestone.
@@ -88,7 +88,7 @@ Script raw access (opt-in):
 - Android: native device access uses existing **NDK Camera2** provider; add minimal Android permission/request/lifecycle bridge and manifest packaging only, **not** Java `CameraDevice`/`ImageReader` camera logic. Current Salts Android minimum is API 26. Request `android.permission.CAMERA` from the host and support explicit denial/cancel/resume.
 - iOS: platform bridge only for `AVCaptureDevice` authorization and host `NSCameraUsageDescription`; **not** a second Swift capture pipeline. Validate actual Godot export and iOS binary/linking rules before claiming support.
 - Desktop: surface accurate system permission/availability result; missing physical camera is not a successful camera test.
-- All platforms: follow app lifecycle; avoid multiple owners competing for the same device. Packaging must include the actual shipped `Salts::Capture` runtime and required third-party license/runtime closure.
+- All platforms: follow app lifecycle; avoid multiple owners competing for the same device. Packaging must include the actual shipped `Salts::Media` runtime and required third-party license/runtime closure.
 
 ## Plugin source and packaging layout (planned; no generated binaries yet)
 
@@ -119,7 +119,7 @@ Runtime `.gdextension` descriptors, Gradle AARs and iOS export files must not li
 
 ## Build/dependency constraints
 
-- CMake must consume a **released/installed** SaltsCore package via `find_package(SaltsCore CONFIG REQUIRED)` and `target_link_libraries(salts_camera PRIVATE Salts::Capture)`. Never copy/fork Capture sources or use its private ABI; any proof-of-concept against a source tree is not release evidence.
+- CMake must consume a **released/installed** SaltsCore package via `find_package(SaltsCore CONFIG REQUIRED)` and `target_link_libraries(salts_camera PRIVATE Salts::Media)`. Never copy/fork Capture sources or use its private ABI; any proof-of-concept against a source tree is not release evidence.
 - Pin `godot-cpp` to the chosen engine ABI; avoid implicit latest dependencies. Keep implementation libraries and their license notices in the deployed artifact.
 - Target Linux/macOS native Clang and Windows **llvm-mingw** (x64/ARM64 as supported by the real toolchain); ccache/cache for repeated builds, download external tool archives with curl where needed. **No MSVC, Mono installation, installer/consumer test projects, or probe-only CI/CMake targets.**
 - Godot camera code is a plugin target; there is no reason for salts-core to link against Godot or for TurboMedia to be mandatory.
