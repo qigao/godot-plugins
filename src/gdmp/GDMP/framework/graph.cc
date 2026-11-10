@@ -149,7 +149,6 @@ Ref<MediaPipeGPUResources> MediaPipeGraph::get_gpu_resources() {
 		return nullptr;
 	return memnew(MediaPipeGPUResources(gpu_resources));
 #else
-	ERR_PRINT("GPU support is disabled in this build.");
 	return nullptr;
 #endif
 }
