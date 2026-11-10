@@ -27,9 +27,9 @@ ARCHIVES = {
         "godot-cpp.tar.gz",
     ),
     "ocv": (
-        f"{CODELOAD}/qigao/ocv/tar.gz/1da26d7d67ca8960bb031e956aa64da83549ca82",
-        "e9b670f0ff9c2052887ae3858b56618b210afb995b2db85947d2a3025a533415",
-        "ocv-gdmp-profile.tar.gz",
+        f"{CODELOAD}/qigao/ocv/tar.gz/35d834d6bf049424becfbe536d367f9279fa78bb",
+        "570f5f791b093f68bd3e7305767b6d36e19ea161ff2c8041b034fecdfd7f722f",
+        "ocv-gdmp-35d834d6bf04.tar.gz",
     ),
 }
 ZLIB = (
@@ -211,6 +211,7 @@ def main():
         parser.error(f"Bazel executable {args.bazel} is unavailable.")
     flags = [
         "--define=MEDIAPIPE_DISABLE_GPU=1",
+        "--repo_env=HERMETIC_PYTHON_VERSION=3.12",
         "--action_env=PYTHONHASHSEED=0",
     ]
     if host != "Windows":
