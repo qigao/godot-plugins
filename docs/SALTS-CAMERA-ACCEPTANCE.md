@@ -1,6 +1,6 @@
 # Salts Camera — acceptance and CI gates
 
-Desktop CI builds the M0 extension and runs native TinyTest, a production-library Godot load test, and a separate headless `CameraTexture` fixture. The Android job builds and inspects the staged ARM64 add-on. Physical devices and APK export require separate evidence. [Frame V2 and GPU roadmap](https://github.com/qigao/salts-core/issues/197)
+Desktop CI builds the M0 extension and runs native TinyTest, a production-library Godot load test, and a separate headless `CameraTexture` fixture. The Android job builds the ARM64 add-on, exports the camera sample, and verifies its signed debug APK. Physical-device checks and release signing require separate evidence. [Frame V2 and GPU roadmap](https://github.com/qigao/salts-core/issues/197)
 
 ## Source of truth
 
@@ -15,9 +15,11 @@ Desktop CI builds the M0 extension and runs native TinyTest, a production-librar
 | Linux x64 | `linux-clang-x64` | `x64-linux` | Build/link with runner Clang and ccache, TinyTest converter/mailbox, Godot headless load/test |
 | Windows x64 | `windows-llvm-mingw-x64` | `qigao-x64-windows-llvm-mingw` | Build/link with llvm-mingw and cache, native TinyTest, Godot headless test on a compatible runner |
 | macOS ARM64 | `macos-clang-arm64` | `arm64-osx` | Build/link with runner Clang and ccache, native TinyTest, Godot headless load |
-| Android ARM64 | `android-arm64` | `arm64-android` | NDK r27d/API 26 build, Godot permission bridge compilation, AArch64 extension and runtime dependency checks |
+| Android ARM64 | `android-arm64` | `arm64-android` | NDK r27d/API 26 build, AArch64 dependency checks, Godot export, signed APK verification |
 
 Add iOS ARM64 and Windows ARM64 once matching SDKs ship. The iOS gate also requires a native link, Godot export and privacy metadata checks. For Linux x64 ThreadSanitizer runs, select the matching `linux-clang-x64-tsan` SDK and an instrumented plugin build.
+
+The Android APK gate checks API 26, the camera permission, ARM64-only native libraries, Godot's extension list, and byte equality with the built add-on. It verifies the debug signature and 16 KiB ZIP alignment. `libsalts_camera.so` also passes the 16 KiB ELF alignment check. The published v0.1.2 `libsalts.so` still has 4 KiB ELF load alignment, so the full package requires a matching aligned SaltsBase SDK before 16 KiB device qualification.
 
 Build and link the real extension from an extracted SDK on each target toolchain. In v0.1.2 the Linux export records absolute PipeWire and X11 library paths in `INTERFACE_LINK_LIBRARIES`. The macOS and Android exports record paths under the producer's `Xcode_16.4.app` and NDK `27.3.13750724` installations. Confirm those references resolve on the consumer runner before counting that platform as qualified. If paths differ, fix the export in SaltsBase and qualify the resulting published SDK.
 

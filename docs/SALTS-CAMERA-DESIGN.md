@@ -77,7 +77,7 @@ Script raw access (opt-in):
 
 ## Plugin source and packaging
 
-`src/salts_camera/` contains the extension and the native frame adapter. CMake stages the platform-specific `.gdextension`, shared extension and runtime libraries under `build/addons/salts_camera/`. Native TinyTest and headless tests live under `tests/`. The synthetic preview input is built into a separate test extension. Android CI checks the staged ARM64 add-on, and signed mobile export is part of M1.
+`src/salts_camera/` contains the extension and the native frame adapter. CMake stages the platform-specific `.gdextension`, shared extension and runtime libraries under `build/addons/salts_camera/`. Native TinyTest and headless tests live under `tests/`. The synthetic preview input is built into a separate test extension. Android CI exports and verifies a signed debug APK using the staged ARM64 add-on.
 
 ## Build/dependency constraints
 

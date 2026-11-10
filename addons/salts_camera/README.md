@@ -41,7 +41,15 @@ cmake --build build-android
 python3 tests/android/check_bundle.py build-android "$ndk"
 ```
 
-The Android check inspects the staged `.gdextension`, AArch64 shared objects and their runtime dependencies. For the Android export preset, enable ARM64, set the minimum SDK to 26 or higher, and enable **Camera** under **Permissions**.
+The Android check inspects the staged `.gdextension`, AArch64 shared objects and their runtime dependencies. For your Android export preset, enable ARM64, use a minimum SDK of 26 or higher, and enable **Camera** under **Permissions**.
+
+The Android CI job publishes `salts-camera-debug-arm64`, a signed test APK for checking permission, preview, and stop on a device. The sample uses the Godot 4.5.2 debug template and sets API 26 through Godot's prebuilt manifest export hook. To export it locally with Android build-tools 35.0.0 and JDK 17, run the following command after extracting `templates/android_debug.apk` from the official 4.5.2 export-template archive.
+
+```sh
+bash tests/android/export_apk.sh build-android /path/to/godot /path/to/android_debug.apk "$ANDROID_HOME" "$JAVA_HOME"
+```
+
+The output is `build-android/salts-camera-android-arm64.apk`. The APK passes 16 KiB ZIP alignment and the extension passes 16 KiB ELF load alignment. The v0.1.2 SaltsBase runtime still uses 4 KiB ELF load alignment.
 
 ## Open and preview a camera
 

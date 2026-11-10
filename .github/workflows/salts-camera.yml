@@ -46,6 +46,9 @@ jobs:
             sdk_sha: 37ad75902682f2934837aebd318b0c97b8ff7078ce850a406f6495507eff2a62
             triplet: arm64-android
             deps_sha: aef8ddbf41d6a9a34e56a94992008fefcfe502be28b2e8b2da682a8f2a399cf5
+            godot_asset: Godot_v4.5.2-stable_linux.x86_64.zip
+            godot_sha: 87f6e6be292929e363d15ed9052f277b2ba4e95ed994e1e099048097be2dfd03
+            godot_bin: Godot_v4.5.2-stable_linux.x86_64
     env:
       CCACHE_DIR: ${{ github.workspace }}/build-cache/ccache
       CCACHE_BASEDIR: ${{ github.workspace }}
@@ -103,6 +106,11 @@ jobs:
           Expand-VerifiedArchive "https://github.com/qigao/salts-base/releases/download/v0.1.2/salts-base-0.1.2-$env:SDK_PROFILE.tar" $env:SDK_SHA $sdk
           Expand-VerifiedArchive "https://github.com/qigao/vcpkg-cache/releases/download/v0.1.2/installed-$env:DEPS_TRIPLET.tar.xz" $env:DEPS_SHA $dependencies
           Expand-VerifiedArchive "https://codeload.github.com/godotengine/godot-cpp/tar.gz/$revision" 'd4c03daf46c8bef4544614182b0762c3e32789151c7f8f44e8eb2053d5cddeba' $bindings
+          Expand-VerifiedArchive "https://github.com/godotengine/godot-builds/releases/download/4.5.2-stable/$env:GODOT_ASSET" $env:GODOT_SHA $engine
+          $godot = Join-Path $engine $env:GODOT_BIN
+          if (!$IsWindows) {
+            chmod +x $godot
+          }
           $prefix = Join-Path $dependencies "vcpkg_installed/$env:DEPS_TRIPLET"
           $godotCpp = Join-Path $bindings "godot-cpp-$revision"
 
@@ -118,8 +126,6 @@ jobs:
             exit 0
           }
 
-          Expand-VerifiedArchive "https://github.com/godotengine/godot-builds/releases/download/4.5.2-stable/$env:GODOT_ASSET" $env:GODOT_SHA $engine
-          $godot = Join-Path $engine $env:GODOT_BIN
           $cc = 'clang'
           $cxx = 'clang++'
           if ($IsWindows) {
@@ -130,8 +136,6 @@ jobs:
             $env:PATH = "$bin;$env:PATH"
             $cc = Join-Path $bin 'x86_64-w64-mingw32-clang.exe'
             $cxx = Join-Path $bin 'x86_64-w64-mingw32-clang++.exe'
-          } else {
-            chmod +x $godot
           }
           if ($IsMacOS) {
             $env:DEVELOPER_DIR = '/Applications/Xcode_16.4.app/Contents/Developer'
@@ -154,3 +158,39 @@ jobs:
             $env:UBSAN_OPTIONS = 'halt_on_error=1'
             ctest --test-dir build-sanitized -R '^salts_camera\.native$' --output-on-failure
           }
+      - uses: actions/cache@v6.1.0
+        if: matrix.sdk == 'android-arm64'
+        id: android-template
+        with:
+          path: build-cache/godot/android_debug.apk
+          key: godot-4.5.2-android-debug-c52dcb8460598a477
+      - name: Extract the pinned Godot Android debug template
+        if: matrix.sdk == 'android-arm64' && steps.android-template.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          asset=Godot_v4.5.2-stable_export_templates.tpz
+          archive="$RUNNER_TEMP/$asset"
+          curl -fsSL --retry 3 "https://github.com/godotengine/godot-builds/releases/download/4.5.2-stable/$asset" -o "$archive"
+          printf '%s  %s\n' ea50e5183f057d42b22120d0d0340205b98f51f8ff13c33c70fd4ac9077d2019 "$archive" | sha256sum -c -
+          mkdir -p build-cache/godot
+          unzip -p "$archive" templates/android_debug.apk > build-cache/godot/android_debug.apk
+          rm "$archive"
+      - name: Export and verify the signed Android APK
+        if: matrix.sdk == 'android-arm64'
+        shell: bash
+        env:
+          GODOT_BIN: ${{ matrix.godot_bin }}
+        run: |
+          set -euo pipefail
+          template=build-cache/godot/android_debug.apk
+          printf '%s  %s\n' c52dcb8460598a477fb533c427b6ea4ada343c36ad3b58a99059bb2927e754f3 "$template" | sha256sum -c -
+          bash tests/android/export_apk.sh build "$RUNNER_TEMP/salts-camera-inputs/engine/$GODOT_BIN" \
+            "$template" "$ANDROID_HOME" "$JAVA_HOME_17_X64"
+      - uses: actions/upload-artifact@v7.0.2
+        if: matrix.sdk == 'android-arm64'
+        with:
+          name: salts-camera-debug-arm64
+          path: build/salts-camera-android-arm64.apk
+          if-no-files-found: error
+          retention-days: 14

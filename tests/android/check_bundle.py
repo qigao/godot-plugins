@@ -30,7 +30,7 @@ def main():
     for resource in (extension, *dependencies):
         library = args.build / resource.removeprefix("res://")
         elf = subprocess.check_output([
-            llvm / "bin/llvm-readelf", "--file-header", "--dynamic", "--dyn-syms", "--wide", library,
+            llvm / "bin/llvm-readelf", "--file-header", "--program-headers", "--dynamic", "--dyn-syms", "--wide", library,
         ], text=True)
         if not re.search(r"Machine:\s+AArch64", elf) or not re.search(r"Type:\s+DYN\b", elf):
             raise SystemExit(f"{library.name} must be an AArch64 shared object")
@@ -38,11 +38,14 @@ def main():
         unresolved = needed - system_libs - packaged_libs
         if unresolved:
             raise SystemExit(f"{library.name} has unstaged dependencies {sorted(unresolved)}")
+        alignment = min(int(value, 16) for value in re.findall(r"^\s*LOAD .+ (0x[0-9a-fA-F]+)$", elf, re.MULTILINE))
         if resource == extension:
             symbol = rf"\bGLOBAL\s+DEFAULT\s+\d+\s+{re.escape(entry)}$"
             if not re.search(symbol, elf, re.MULTILINE) or "libcamera2ndk.so" not in needed:
                 raise SystemExit("Android camera extension must export its entry and link the NDK camera backend")
-        print(f"{library.name} verified with dependencies {sorted(needed)}")
+            if alignment < 16 * 1024:
+                raise SystemExit("Android camera extension must use at least 16 KiB ELF load alignment")
+        print(f"{library.name} verified with {alignment // 1024} KiB ELF load alignment and dependencies {sorted(needed)}")
 
 
 if __name__ == "__main__":
