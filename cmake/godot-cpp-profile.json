@@ -1,0 +1,13 @@
+{
+  "enabled_classes": [
+    "CameraFeed",
+    "CameraServer",
+    "Engine",
+    "FileAccess",
+    "Image",
+    "OS",
+    "SceneTree",
+    "WorkerThreadPool",
+    "XMLParser"
+  ]
+}

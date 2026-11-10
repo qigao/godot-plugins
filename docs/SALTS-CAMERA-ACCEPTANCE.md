@@ -1,6 +1,6 @@
 # Salts Camera — acceptance and CI gates
 
-The gates below apply once the GDExtension is implemented. The Frame V2 and GPU frame roadmap is tracked in [salts-core #197](https://github.com/qigao/salts-core/issues/197).
+The desktop workflow builds the actual M0 extension and runs native TinyTest, a production-library Godot load test, and a separate headless `CameraTexture` fixture. Physical-device and mobile-export gates require separate evidence. [Frame V2 and GPU roadmap](https://github.com/qigao/salts-core/issues/197)
 
 ## Source of truth
 
@@ -8,14 +8,14 @@ The gates below apply once the GDExtension is implemented. The Frame V2 and GPU 
 - Carry forward the PulseAudio initialization failure under leak checking, iOS compatibility, physical-device and permission testing, and redistributable dependency closure as independent gates for the affected platforms. These gates predate the repository move. [Media release gate record](https://github.com/qigao/salts-core/blob/0a4eb95c03427fa5dd4ca5486162e24e52f0e0d2/media/release-blockers.json)
 - Disallow production duplicate camera drivers, fake cameras or fallback to a different explicit `mode_id`.
 
-## CI matrix (after implementation)
+## CI matrix
 
 | Target | SaltsBase SDK profile | vcpkg triplet | Planned automated evidence |
 | --- | --- | --- | --- |
 | Linux x64 | `linux-clang-x64` | `x64-linux` | Build/link with runner Clang and ccache, TinyTest converter/mailbox, Godot headless load/test |
 | Windows x64 | `windows-llvm-mingw-x64` | `qigao-x64-windows-llvm-mingw` | Build/link with llvm-mingw and cache, native TinyTest, Godot headless test on a compatible runner |
 | macOS ARM64 | `macos-clang-arm64` | `arm64-osx` | Build/link with runner Clang and ccache, native TinyTest, Godot headless load |
-| Android ARM64 | `android-arm64` | `arm64-android` | NDK build/link, permission bridge compilation, export package and dependency closure |
+| Android ARM64 (M1) | `android-arm64` | `arm64-android` | Planned NDK build/link, permission bridge compilation, export package and dependency closure |
 
 Add iOS ARM64 and Windows ARM64 once matching SDKs ship. The iOS gate also requires a native link, Godot export and privacy metadata checks. For Linux x64 ThreadSanitizer runs, select the matching `linux-clang-x64-tsan` SDK and an instrumented plugin build.
 

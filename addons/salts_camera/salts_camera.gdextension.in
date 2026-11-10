@@ -1,0 +1,11 @@
+[configuration]
+entry_symbol = "salts_camera_library_init"
+compatibility_minimum = "4.5.2"
+compatibility_maximum = "4.5.2"
+reloadable = false
+
+[libraries]
+@camera_platform@.@camera_arch@ = "res://addons/salts_camera/@bin_relative@/@camera_library@"
+
+[dependencies]
+@camera_platform@.@camera_arch@ = {@camera_dependencies@}

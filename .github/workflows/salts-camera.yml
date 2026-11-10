@@ -1,0 +1,128 @@
+name: Salts Camera CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  desktop:
+    name: ${{ matrix.sdk }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            sdk: linux-clang-x64
+            sdk_sha: e3308abed36a8af62b4be504e07bf7fcd2441e48d04519bba37de1fae1395b68
+            triplet: x64-linux
+            deps_sha: f9b8ca57488c7426508b1a0e6d453eba3a9475468844044ad596905ca472c3a0
+            godot_asset: Godot_v4.5.2-stable_linux.x86_64.zip
+            godot_sha: 87f6e6be292929e363d15ed9052f277b2ba4e95ed994e1e099048097be2dfd03
+            godot_bin: Godot_v4.5.2-stable_linux.x86_64
+          - runner: windows-2025
+            sdk: windows-llvm-mingw-x64
+            sdk_sha: 8fa0f232a17c6cfc9d3497ba278be5851c88b630a1197ebc95b2003aad48f25e
+            triplet: qigao-x64-windows-llvm-mingw
+            deps_sha: 34bc670c3637fa30eba1ba87f1bb4d7e6728dd50b9b6ea2362be17d761759a69
+            godot_asset: Godot_v4.5.2-stable_win64.exe.zip
+            godot_sha: 3766090865330ab2a0ed33594520394b711c620b1378f9223904faeef60f2f14
+            godot_bin: Godot_v4.5.2-stable_win64_console.exe
+          - runner: macos-15
+            sdk: macos-clang-arm64
+            sdk_sha: cf4761e40f63b45a9c27946ca2094b1ff33eb789e85f96b6a967caddf2140b1b
+            triplet: arm64-osx
+            deps_sha: c078193387c94dd8ae5bb8bf0c89660b7b5bfcebbe52fcd4dd70d27f7f0206ac
+            godot_asset: Godot_v4.5.2-stable_macos.universal.zip
+            godot_sha: 2a3f35cf5813b0d26e3f4c15dabc5e7c58407fceec7bae5291740772f72d141a
+            godot_bin: Godot.app/Contents/MacOS/Godot
+    env:
+      CCACHE_DIR: ${{ runner.temp }}/salts-camera-ccache
+      CCACHE_BASEDIR: ${{ github.workspace }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: qigao/vcpkg-cache/.github/actions/setup-ccache@v0.1.2
+      - uses: actions/cache@v6.1.0
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: salts-camera-0.1.2-${{ matrix.sdk }}-${{ hashFiles('CMakeLists.txt', 'cmake/**', 'src/**', 'tests/**') }}
+          restore-keys: salts-camera-0.1.2-${{ matrix.sdk }}-
+      - name: Install Linux system libraries
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends libpipewire-0.3-dev libx11-dev libxext-dev
+      - name: Build and test the GDExtension against the published SDK
+        env:
+          SDK_PROFILE: ${{ matrix.sdk }}
+          SDK_SHA: ${{ matrix.sdk_sha }}
+          DEPS_TRIPLET: ${{ matrix.triplet }}
+          DEPS_SHA: ${{ matrix.deps_sha }}
+          GODOT_ASSET: ${{ matrix.godot_asset }}
+          GODOT_SHA: ${{ matrix.godot_sha }}
+          GODOT_BIN: ${{ matrix.godot_bin }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+          $inputs = Join-Path $env:RUNNER_TEMP 'salts-camera-inputs'
+          New-Item -ItemType Directory -Path $inputs | Out-Null
+
+          function Expand-VerifiedArchive($url, $sha, $directory) {
+            $archive = Join-Path $inputs ([IO.Path]::GetFileName($url))
+            curl -fsSL --retry 3 $url -o $archive
+            if ((Get-FileHash -Algorithm SHA256 $archive).Hash -ne $sha) {
+              throw "SHA-256 mismatch for $archive"
+            }
+            New-Item -ItemType Directory -Path $directory | Out-Null
+            Push-Location $directory
+            try { cmake -E tar xf $archive } finally { Pop-Location }
+          }
+
+          $sdk = Join-Path $inputs 'salts-base'
+          $dependencies = Join-Path $inputs 'dependencies'
+          $bindings = Join-Path $inputs 'bindings'
+          $engine = Join-Path $inputs 'engine'
+          $revision = 'e83fd0904c13356ed1d4c3d09f8bb9132bdc6b77'
+          Expand-VerifiedArchive "https://github.com/qigao/salts-base/releases/download/v0.1.2/salts-base-0.1.2-$env:SDK_PROFILE.tar" $env:SDK_SHA $sdk
+          Expand-VerifiedArchive "https://github.com/qigao/vcpkg-cache/releases/download/v0.1.2/installed-$env:DEPS_TRIPLET.tar.xz" $env:DEPS_SHA $dependencies
+          Expand-VerifiedArchive "https://codeload.github.com/godotengine/godot-cpp/tar.gz/$revision" 'd4c03daf46c8bef4544614182b0762c3e32789151c7f8f44e8eb2053d5cddeba' $bindings
+          Expand-VerifiedArchive "https://github.com/godotengine/godot-builds/releases/download/4.5.2-stable/$env:GODOT_ASSET" $env:GODOT_SHA $engine
+
+          $godot = Join-Path $engine $env:GODOT_BIN
+          $prefix = Join-Path $dependencies "vcpkg_installed/$env:DEPS_TRIPLET"
+          $godotCpp = Join-Path $bindings "godot-cpp-$revision"
+          $cc = 'clang'
+          $cxx = 'clang++'
+          if ($IsWindows) {
+            $compiler = Join-Path $inputs 'compiler'
+            $package = 'llvm-mingw-20261020-ucrt-x86_64'
+            Expand-VerifiedArchive "https://github.com/mstorsjo/llvm-mingw/releases/download/20261020/$package.zip" 'fd5462b7f5d93b2ff981fcd3f9c7e427e47f3203c64ea91c27bcc444eebd74cd' $compiler
+            $bin = Join-Path $compiler "$package/bin"
+            $env:PATH = "$bin;$env:PATH"
+            $cc = Join-Path $bin 'x86_64-w64-mingw32-clang.exe'
+            $cxx = Join-Path $bin 'x86_64-w64-mingw32-clang++.exe'
+          } else {
+            chmod +x $godot
+          }
+          if ($IsMacOS) {
+            $env:DEVELOPER_DIR = '/Applications/Xcode_16.4.app/Contents/Developer'
+          }
+
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON `
+            "-DCMAKE_C_COMPILER=$cc" "-DCMAKE_CXX_COMPILER=$cxx" `
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache "-DCMAKE_PREFIX_PATH=$sdk;$prefix" `
+            "-DGODOT_CPP_DIR=$godotCpp" "-DGODOT_EXECUTABLE=$godot"
+          cmake --build build --parallel 4
+          ctest --test-dir build --output-on-failure
