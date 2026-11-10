@@ -213,10 +213,11 @@ def main():
     if not bazel:
         parser.error(f"Bazel executable {args.bazel} is unavailable.")
     flags = [
-        "--define=MEDIAPIPE_DISABLE_GPU=1",
         "--repo_env=HERMETIC_PYTHON_VERSION=3.12",
         "--action_env=PYTHONHASHSEED=0",
     ]
+    if args.target not in {"android", "ios"}:
+        flags.append("--define=MEDIAPIPE_DISABLE_GPU=1")
     if host != "Windows":
         flags += ["--copt=-fPIC", "--cxxopt=-std=c++17", "--host_cxxopt=-std=c++17"]
     build_env = os.environ.copy()
