@@ -271,7 +271,11 @@ def main():
         "--action_env=PYTHONHASHSEED=0",
     ]
     if args.target == "desktop" and host == "Linux":
-        flags += ["--copt=-DEGL_NO_X11", "--copt=-DMESA_EGL_NO_X11_HEADERS"]
+        flags += [
+            "--copt=-DEGL_NO_X11",
+            "--copt=-DMESA_EGL_NO_X11_HEADERS",
+            "--per_file_copt=gl_context_egl[.]cc$@-DMEDIAPIPE_OMIT_EGL_WINDOW_BIT",
+        ]
     if host != "Windows":
         flags += ["--copt=-fPIC", "--cxxopt=-std=c++17", "--host_cxxopt=-std=c++17"]
     subprocess.run(
