@@ -156,6 +156,9 @@ def target_options(target, arch, host):
         return flags
     if host == "Windows":
         return ["--conlyopt=/std:c11", "--conlyopt=/experimental:c11atomics"]
+    if host == "Linux" and arch == "x86_64":
+        # Ubuntu's Clang 18 crashes compiling XNNPACK's AVX-512 FP16 kernel.
+        return ["--define=xnn_enable_avx512fp16=false"]
     return []
 
 
