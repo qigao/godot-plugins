@@ -33,6 +33,7 @@ jobs:
             runner: ubuntu-24.04
             target: desktop
             arch: x86_64
+            opencv: sdk
             bazel: bazel-6.5.0-linux-x86_64
             bazel_sha: a40ac69263440761199fcb8da47ad4e3f328cbe79ffbf4ecc14e5ba252857307
             godot_asset: Godot_v4.5.2-stable_linux.x86_64.zip
@@ -42,6 +43,7 @@ jobs:
             runner: macos-15
             target: desktop
             arch: arm64
+            opencv: source
             bazel: bazel-6.5.0-darwin-arm64
             bazel_sha: c6b6dc17efcdf13fba484c6fe0b6c3361b888ae7b9573bc25a2dbe8c502448eb
             godot_asset: Godot_v4.5.2-stable_macos.universal.zip
@@ -51,6 +53,7 @@ jobs:
             runner: ubuntu-24.04
             target: android
             arch: arm64
+            opencv: sdk
             bazel: bazel-6.5.0-linux-x86_64
             bazel_sha: a40ac69263440761199fcb8da47ad4e3f328cbe79ffbf4ecc14e5ba252857307
     steps:
@@ -88,12 +91,13 @@ jobs:
           TARGET: ${{ matrix.target }}
           ARCH: ${{ matrix.arch }}
           BAZEL: ${{ matrix.bazel }}
+          OPENCV: ${{ matrix.opencv }}
         run: |
           if [[ "$TARGET" == android ]]; then
             export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/27.3.13750724"
           fi
           python3 -B src/gdmp/build.py "$TARGET" --arch "$ARCH" \
-            --bazel "build-mediapipe/downloads/$BAZEL"
+            --bazel "build-mediapipe/downloads/$BAZEL" --opencv "$OPENCV"
       - name: Run face, hand, and pose inference in Godot
         if: matrix.target == 'desktop'
         shell: bash

@@ -1,0 +1,42 @@
+cc_import(
+    name = "imgproc",
+    static_library = "lib/libopencv_imgproc.a",
+)
+
+cc_import(
+    name = "core",
+    static_library = "lib/libopencv_core.a",
+)
+
+cc_import(
+    name = "cpufeatures",
+    static_library = select({
+        "@platforms//cpu:arm64": "sdk/native/3rdparty/libs/arm64-v8a/libcpufeatures.a",
+        "@platforms//cpu:x86_64": "sdk/native/3rdparty/libs/x86_64/libcpufeatures.a",
+    }),
+)
+
+cc_library(
+    name = "opencv",
+    hdrs = glob([
+        "include/opencv4/opencv2/**",
+        "sdk/native/jni/include/opencv2/**",
+    ]),
+    includes = select({
+        "@platforms//os:android": ["sdk/native/jni/include"],
+        "@platforms//os:linux": ["include/opencv4"],
+    }),
+    linkopts = select({
+        "@platforms//os:android": ["-landroid", "-ldl", "-llog", "-lm"],
+        "@platforms//os:linux": ["-ldl", "-lm", "-lpthread", "-lrt"],
+    }),
+    deps = [
+        ":imgproc",
+        ":core",
+        "@zlib//:zlib",
+    ] + select({
+        "@platforms//os:android": [":cpufeatures"],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+)

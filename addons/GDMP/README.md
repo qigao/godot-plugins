@@ -11,6 +11,10 @@ python3 src/gdmp/build.py desktop
 python3 src/gdmp/build.py android --arch arm64
 ```
 
+Pass `--opencv sdk` to statically link the checksum-pinned [OCV v0.1.0 SDK](https://github.com/qigao/ocv/releases/tag/v0.1.0) on Linux or Android x64 and ARM64. Linux SDK packages target the Ubuntu 24.04 toolchain. Android SDK packages use NDK 27.3.13750724 and API 26. CI uses SDK mode on Linux x64 and Android ARM64.
+
+The source profile is the default. macOS uses it to preserve deployment compatibility because the v0.1.0 macOS archives target macOS 15.
+
 Copy `build-mediapipe/addons/GDMP` to the Godot project's `addons/` directory, open the project in Godot, and enable **GDMP** under **Project Settings → Plugins**. Build several targets into the same output directory to assemble a multi-platform add-on.
 
 | Target | Architectures | CI coverage |
