@@ -18,3 +18,5 @@ CI builds and tests the desktop extension and exports a signed Android ARM64 deb
 ## GDMP
 
 An in-tree import of the GDMP Godot add-on for MediaPipe graphs and tasks. It uses static OpenCV from qigao/ocv and accepts Godot images, including SaltsCamera snapshots. [Build and API](addons/GDMP/README.md)
+
+[Run the GDMP demo](demos/gdmp/README.md)
