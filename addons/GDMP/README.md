@@ -4,6 +4,20 @@ GDMP is a native Godot 4.5 add-on for MediaPipe graphs and tasks. It accepts God
 
 ## Build
 
+### Build against a MediaPipe SDK
+
+On Linux x64 and ARM64, the CMake build consumes the native MediaPipe Tasks SDK from [qigao/mediapipe](https://github.com/qigao/mediapipe). Extract the matching SDK and point CMake at its installation prefix. The SDK includes the OpenCV libraries selected by its build.
+
+```sh
+cmake -S src/gdmp -B build-gdmp-sdk -G Ninja -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_PREFIX_PATH=/path/to/mediapipe-sdk -DGODOT_CPP_DIR=/path/to/godot-cpp
+cmake --build build-gdmp-sdk
+```
+
+The build stages the add-on under `build-gdmp-sdk/addons/GDMP`.
+
+### Build from MediaPipe source
+
 Install Bazel 6.5.0, Python 3.11 or newer, curl, Git, tar, and the platform's C++ toolchain. Build Android with NDK 27.3.13750724 by setting `ANDROID_NDK_HOME` to the NDK directory.
 
 ```sh
