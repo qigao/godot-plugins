@@ -6,13 +6,15 @@ GDMP is a native Godot 4.5 add-on for MediaPipe graphs and tasks. It accepts God
 
 ### Build against a MediaPipe SDK
 
-On Linux x64 and ARM64, the CMake build consumes the native MediaPipe Tasks SDK from [qigao/mediapipe](https://github.com/qigao/mediapipe). Extract the matching SDK and point CMake at its installation prefix. Use the GPU-enabled SDK and install the EGL and OpenGL ES development libraries. The SDK includes the OpenCV libraries selected by its build.
+The CMake build consumes the native MediaPipe Tasks SDK from [qigao/mediapipe](https://github.com/qigao/mediapipe) on Linux, Android, and macOS, each with an x64 and ARM64 archive. Extract the matching GPU-enabled SDK and point CMake at its `lib/cmake/MediaPipe` directory. The SDK includes its OpenCV libraries. Install the EGL and OpenGL ES development libraries on Linux.
 
 ```sh
 cmake -S src/gdmp -B build-gdmp-sdk -G Ninja -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_PREFIX_PATH=/path/to/mediapipe-sdk -DGODOT_CPP_DIR=/path/to/godot-cpp
+  -DMediaPipe_DIR=/path/to/mediapipe-sdk/lib/cmake/MediaPipe -DGODOT_CPP_DIR=/path/to/godot-cpp
 cmake --build build-gdmp-sdk
 ```
+
+On macOS, add `-DCMAKE_OSX_DEPLOYMENT_TARGET=15.0` and set `CMAKE_OSX_ARCHITECTURES` to `arm64` or `x86_64` for the selected archive. On Android, add `-DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake" -DANDROID_PLATFORM=android-26` and set `ANDROID_ABI` to `arm64-v8a` or `x86_64`. Use NDK 27.3.13750724.
 
 The build stages the add-on under `build-gdmp-sdk/addons/GDMP`. Run the [GDMP with MediaPipe SDK workflow](../../.github/workflows/gdmp-sdk.yml) with a published SDK tag and both archive checksums to test inference on Linux x64 and ARM64.
 
