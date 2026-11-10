@@ -42,7 +42,7 @@ jobs:
             godot_sha: 2a3f35cf5813b0d26e3f4c15dabc5e7c58407fceec7bae5291740772f72d141a
             godot_bin: Godot.app/Contents/MacOS/Godot
     env:
-      CCACHE_DIR: ${{ runner.temp }}/salts-camera-ccache
+      CCACHE_DIR: ${{ github.workspace }}/build-cache/ccache
       CCACHE_BASEDIR: ${{ github.workspace }}
     defaults:
       run:
@@ -120,9 +120,20 @@ jobs:
             $env:DEVELOPER_DIR = '/Applications/Xcode_16.4.app/Contents/Developer'
           }
 
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON `
-            "-DCMAKE_C_COMPILER=$cc" "-DCMAKE_CXX_COMPILER=$cxx" `
-            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache "-DCMAKE_PREFIX_PATH=$sdk;$prefix" `
-            "-DGODOT_CPP_DIR=$godotCpp" "-DGODOT_EXECUTABLE=$godot"
+          $configure = @('-S', '.', '-G', 'Ninja', '-DBUILD_TESTING=ON',
+            "-DCMAKE_C_COMPILER=$cc", "-DCMAKE_CXX_COMPILER=$cxx",
+            '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache', "-DCMAKE_PREFIX_PATH=$sdk;$prefix",
+            "-DGODOT_CPP_DIR=$godotCpp", "-DGODOT_EXECUTABLE=$godot")
+          cmake @configure -B build -DCMAKE_BUILD_TYPE=Release
           cmake --build build --parallel 4
           ctest --test-dir build --output-on-failure
+
+          if ($IsLinux) {
+            $flags = '-fsanitize=address,undefined -fno-omit-frame-pointer'
+            cmake @configure -B build-sanitized -DCMAKE_BUILD_TYPE=Debug `
+              "-DCMAKE_C_FLAGS=$flags" "-DCMAKE_CXX_FLAGS=$flags"
+            cmake --build build-sanitized --target salts_camera_native_tests --parallel 4
+            $env:ASAN_OPTIONS = 'detect_leaks=1:halt_on_error=1'
+            $env:UBSAN_OPTIONS = 'halt_on_error=1'
+            ctest --test-dir build-sanitized -R '^salts_camera\.native$' --output-on-failure
+          }
