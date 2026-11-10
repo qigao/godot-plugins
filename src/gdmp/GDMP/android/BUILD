@@ -23,8 +23,9 @@ cc_library(
 
 cc_binary(
     name = "GDMP",
+    additional_linker_inputs = ["//GDMP:exports.lds"],
     linkopts = [
-        "-Wl,--exclude-libs,ALL",
+        "-Wl,--version-script=$(location //GDMP:exports.lds)",
         "-Wl,-z,defs",
         "-Wl,-z,max-page-size=16384",
         "-Wl,-z,common-page-size=16384",

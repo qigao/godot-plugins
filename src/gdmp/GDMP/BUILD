@@ -1,5 +1,7 @@
 load("//GDMP:GDMP.bzl", "CALCULATORS", "TASKS")
 
+exports_files(["exports.lds"])
+
 cc_library(
     name = "GDMP",
     srcs = ["gdlibrary.cc"],
