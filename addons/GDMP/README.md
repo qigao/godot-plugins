@@ -14,7 +14,7 @@ cmake -S src/gdmp -B build-gdmp-sdk -G Ninja -DCMAKE_BUILD_TYPE=Release \
 cmake --build build-gdmp-sdk
 ```
 
-The build stages the add-on under `build-gdmp-sdk/addons/GDMP`.
+The build stages the add-on under `build-gdmp-sdk/addons/GDMP`. Run the [GDMP with MediaPipe SDK workflow](../../.github/workflows/gdmp-sdk.yml) with a published SDK tag and both archive checksums to test inference on Linux x64 and ARM64.
 
 ### Build from MediaPipe source
 
