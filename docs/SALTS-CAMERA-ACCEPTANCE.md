@@ -1,23 +1,25 @@
 # Salts Camera — acceptance and CI gates
 
-**Status:** Design only; no CI has been run and no device has been exercised. [Upstream Capture issue #197](https://github.com/qigao/salts-core/issues/197).
+The gates below apply once the GDExtension is implemented. The Frame V2 and GPU frame roadmap is tracked in [salts-core #197](https://github.com/qigao/salts-core/issues/197).
 
 ## Source of truth
 
-- Pin an exact SaltsCore SDK release and `godot-cpp` engine-compatible revision. Never treat compilation against `master` as proof of published SDK availability.
-- `media/release-blockers.json` in salts-core currently has `release_ready=false`. The miniaudio PulseAudio initialization leak, iOS missing-six-symbol compatibility qualification, physical device/permission testing and redistributable dependency closure are **separate** release gates. Plugin build/CI does not override any of them.
+- Pin the SaltsBase v0.1.2 SDK, the matching vcpkg-cache v0.1.2 dependency archive for its triplet, and an engine-compatible `godot-cpp` revision. Verify the SDK checksum against the release manifest. [SaltsBase release](https://github.com/qigao/salts-base/releases/tag/v0.1.2) · [vcpkg-cache release](https://github.com/qigao/vcpkg-cache/releases/tag/v0.1.2)
+- Carry forward the PulseAudio initialization failure under leak checking, iOS compatibility, physical-device and permission testing, and redistributable dependency closure as independent gates for the affected platforms. These gates predate the repository move. [Media release gate record](https://github.com/qigao/salts-core/blob/0a4eb95c03427fa5dd4ca5486162e24e52f0e0d2/media/release-blockers.json)
 - Disallow production duplicate camera drivers, fake cameras or fallback to a different explicit `mode_id`.
 
 ## CI matrix (after implementation)
 
-| Target | Toolchain | Automated evidence |
-| --- | --- | --- |
-| Linux x64 native | runner clang + ccache | build/link, TinyTest converter/mailbox, Godot headless GDExtension load/test |
-| Windows x64 native/cross | llvm-mingw + cache | build/link, native TinyTest; real Godot headless runtime when a compatible runner is available |
-| macOS ARM64 | runner clang + ccache | build/link, native TinyTest and headless GDExtension smoke |
-| Android ARM64 | Android NDK clang | native build, export package manifest/dependency closure, permission bridge compilation; not hardware runtime |
-| iOS ARM64 | Apple clang | native build, correct Godot export/link form, privacy metadata checks; not device runtime |
-| Additional x64/ARM64 RIDs | supported LLVM | only add after exact produced artifacts and load tests |
+| Target | SaltsBase SDK profile | vcpkg triplet | Planned automated evidence |
+| --- | --- | --- | --- |
+| Linux x64 | `linux-clang-x64` | `x64-linux` | Build/link with runner Clang and ccache, TinyTest converter/mailbox, Godot headless load/test |
+| Windows x64 | `windows-llvm-mingw-x64` | `qigao-x64-windows-llvm-mingw` | Build/link with llvm-mingw and cache, native TinyTest, Godot headless test on a compatible runner |
+| macOS ARM64 | `macos-clang-arm64` | `arm64-osx` | Build/link with runner Clang and ccache, native TinyTest, Godot headless load |
+| Android ARM64 | `android-arm64` | `arm64-android` | NDK build/link, permission bridge compilation, export package and dependency closure |
+
+Add iOS ARM64 and Windows ARM64 once matching SDKs ship. The iOS gate also requires a native link, Godot export and privacy metadata checks. For Linux x64 ThreadSanitizer runs, select the matching `linux-clang-x64-tsan` SDK and an instrumented plugin build.
+
+Build and link the real extension from an extracted SDK on each target toolchain. In v0.1.2 the Linux export records absolute PipeWire and X11 library paths in `INTERFACE_LINK_LIBRARIES`. The macOS and Android exports record paths under the producer's `Xcode_16.4.app` and NDK `27.3.13750724` installations. Confirm those references resolve on the consumer runner before counting that platform as qualified. If paths differ, fix the export in SaltsBase and qualify the resulting published SDK.
 
 No Mono, MSVC, installer/consumer test projects or probe-only CI; external archives may be fetched with curl from pinned, authenticated locations. CI must not claim real camera validation on runner hosts without cameras.
 
@@ -41,4 +43,4 @@ No Mono, MSVC, installer/consumer test projects or probe-only CI; external archi
 
 ## Release gate
 
-Only release when: compiled and loadable artifacts exist for each advertised RID; exact-head CI and ABI/source tests pass; required native-device checks have evidence; SaltsCore release blockers are resolved for shipped RIDs; packaged runtime dependencies and license closure are verified. No forced godot-cpp or libyuv runtime installed by the game from a source checkout.
+For each advertised RID, release requires a compiled and loadable artifact, passing CI and ABI/source tests on the release commit, native-device evidence, completion of the applicable Media gates, and verified runtime dependencies and license notices in the package.

@@ -15,10 +15,10 @@
 5. A script or native consumer can request an **owned** raw-frame snapshot without keeping a Capture callback pointer.
 6. Deactivate, unregister, stop/join and release device resources on shutdown.
 
-The plugin will use **Salts::Media** as the sole native camera provider. For Android, Java is permitted only for runtime permission/export lifecycle; no Java Camera2 implementation will be added. For Apple targets, Objective-C++ is permitted only for permission/export integration; no second AVFoundation capture pipeline will be added.
+The sole native camera provider is the static `Salts::Media` target from the installed SaltsBase v0.1.2 SDK. Android Java and Apple Objective-C++ bridges are limited to permission and export integration. [SDK release](https://github.com/qigao/salts-base/releases/tag/v0.1.2)
 
 ## MVP constraints
 
-Current Capture callback format is inferred from the exact selected mode; no per-frame V2 structure or GPU-native handle exists yet. The first plugin is CPU-based and uses a bounded latest-frame mailbox. Its convert/upload route can involve copies and must not be advertised as GPU zero-copy. Desktop comes first; mobile export and real-device testing require their own acceptance gates.
+The plugin reads the pixel format from the selected native mode and receives borrowed frame bytes through `video_capture_cb` in `capture.h`. The first plugin is CPU-based and uses a bounded latest-frame mailbox. Its convert/upload route can involve copies and must not be advertised as GPU zero-copy. Desktop comes first; mobile export and real-device testing require their own acceptance gates.
 
 No release artifact or working GDScript API exists at this design stage.
