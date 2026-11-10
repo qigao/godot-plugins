@@ -36,7 +36,8 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
-      - uses: actions/cache@v6.1.0
+      - uses: actions/cache/restore@v6.1.0
+        id: cache
         with:
           path: |
             build-mediapipe/downloads
@@ -64,3 +65,11 @@ jobs:
           python3 -B tests/mediapipe/check_android.py \
             build-mediapipe/addons/salts_mediapipe/bin/android/arm64/libsalts_mediapipe.so \
             "$ANDROID_HOME/ndk/27.3.13750724"
+      - uses: actions/cache/save@v6.1.0
+        if: ${{ !cancelled() && steps.cache.outputs.cache-hit != 'true' }}
+        with:
+          path: |
+            build-mediapipe/downloads
+            build-mediapipe/repository-cache
+            build-mediapipe/disk-cache
+          key: ${{ steps.cache.outputs.cache-primary-key }}

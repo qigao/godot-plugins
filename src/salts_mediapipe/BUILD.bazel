@@ -8,6 +8,16 @@ cc_binary(
     copts = [
         "-fvisibility=hidden",
     ],
+    linkopts = [
+        "-Wl,--exclude-libs,ALL",
+        "-Wl,-z,defs",
+    ] + select({
+        "@platforms//os:android": [
+            "-Wl,-z,max-page-size=16384",
+            "-Wl,-z,common-page-size=16384",
+        ],
+        "//conditions:default": [],
+    }),
     linkshared = True,
     linkstatic = True,
     deps = [

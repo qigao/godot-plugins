@@ -18,8 +18,6 @@ case "$platform" in
             --incompatible_enable_cc_toolchain_resolution
             --platforms=//mediapipe:android_arm64_platform
             --extra_toolchains=@androidndk//:all
-            --linkopt=-Wl,-z,max-page-size=16384
-            --linkopt=-Wl,-z,common-page-size=16384
         )
         ;;
     *)
@@ -50,6 +48,8 @@ bazel="$downloads/bazel-6.5.0-linux-x86_64"
 fetch https://releases.bazel.build/6.5.0/release/bazel-6.5.0-linux-x86_64 \
     a40ac69263440761199fcb8da47ad4e3f328cbe79ffbf4ecc14e5ba252857307 "$(basename -- "$bazel")"
 chmod +x "$bazel"
+fetch https://zlib.net/fossils/zlib-1.2.13.tar.gz \
+    b3a24de97a8fdbc835b9833169501030b8977031bcb54b3b3ac13740f846ab30 zlib-1.2.13.tar.gz
 
 inputs=$(sha256sum "$repo/scripts/build-mediapipe.sh" "$sources/"{godot-cpp-profile.json,opencv-native.patch} | sha256sum)
 if [[ ! -f "$deps/.prepared" ]] || [[ "$(cat "$deps/.prepared")" != "$inputs" ]]; then
@@ -108,7 +108,6 @@ fi
         --disk_cache="$out/disk-cache" --repository_cache="$out/repository-cache" --distdir="$downloads" \
         --copt=-fPIC --cxxopt=-std=c++17 --host_cxxopt=-std=c++17 \
         --define=MEDIAPIPE_DISABLE_GPU=1 --define=OPENCV=source \
-        --linkopt=-Wl,--exclude-libs,ALL --linkopt=-Wl,-z,defs \
         "${target_flags[@]}" @salts_mediapipe//:libsalts_mediapipe.so
 )
 install -D "$mediapipe/bazel-bin/external/salts_mediapipe/libsalts_mediapipe.so" \
