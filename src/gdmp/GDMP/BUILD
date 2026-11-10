@@ -1,4 +1,3 @@
-load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
 load("//GDMP:GDMP.bzl", "CALCULATORS", "TASKS")
 
 cc_library(
@@ -29,21 +28,4 @@ cc_library(
         "@godot-cpp//:godot",
     ] + CALCULATORS + TASKS,
     alwayslink = 1,
-)
-
-refresh_compile_commands(
-    name = "refresh_compile_commands",
-    targets = {
-        "@GDMP//GDMP:GDMP": "",
-        "@GDMP//GDMP/android:asset_util": """
-        --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
-        --crosstool_top=//external:android/crosstool
-        --cpu=arm64-v8a
-        """,
-        "@GDMP//GDMP/android:jni": """
-        --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
-        --crosstool_top=//external:android/crosstool
-        --cpu=arm64-v8a
-        """,
-    },
 )

@@ -12,6 +12,7 @@ cc_library(
     ]),
     hdrs = glob([
         "gdextension/*.h",
+        "include/**/*.inc",
         "include/godot_cpp/*.hpp",
         "include/godot_cpp/*/*.hpp",
         "gen/include/godot_cpp/*/*.hpp",
@@ -22,6 +23,8 @@ cc_library(
         ],
         "//conditions:default": [
             "-fno-exceptions",
+            "-include",
+            "cstdlib",
         ],
     }),
     defines = select({

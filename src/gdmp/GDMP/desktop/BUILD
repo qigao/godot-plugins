@@ -4,7 +4,8 @@ cc_binary(
         "@platforms//os:macos": [],
         "@platforms//os:windows": [],
         "//conditions:default": [
-            "-Wl,-R,'$$ORIGIN'",
+            "-Wl,--exclude-libs,ALL",
+            "-Wl,-z,defs",
             "-s",
         ],
     }),

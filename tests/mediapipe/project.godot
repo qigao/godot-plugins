@@ -1,7 +1,7 @@
 config_version=5
 
 [application]
-config/name="Salts MediaPipe Tests"
+config/name="GDMP Tests"
 
 [rendering]
 renderer/rendering_method="gl_compatibility"

@@ -12,47 +12,55 @@ func require(condition: bool, message: String) -> bool:
 	return condition
 
 
+func model_options(name: String) -> MediaPipeTaskBaseOptions:
+	var options := MediaPipeTaskBaseOptions.new()
+	options.model_asset_buffer = FileAccess.get_file_as_bytes("res://test-data/%s.task" % name)
+	return options
+
+
+func check_landmarks(result: Object, getter: String, count: int) -> bool:
+	if not require(result != null, "%s returned no result" % getter):
+		return false
+	var subjects: Array = result.call(getter)
+	if not require(subjects.size() == 1, "%s returned %d subjects" % [getter, subjects.size()]):
+		return false
+	var landmarks: Array = subjects[0].get_landmarks()
+	if not require(landmarks.size() == count, "%s returned %d landmarks" % [getter, landmarks.size()]):
+		return false
+	for landmark in landmarks:
+		var point := Vector3(landmark.get_x(), landmark.get_y(), landmark.get_z())
+		if not require(point.is_finite(), "%s returned a non-finite landmark" % getter):
+			return false
+	return true
+
+
 func run() -> void:
-	var landmarker := SaltsMediaPipeLandmarker.new()
 	var cases := [
-		[SaltsMediaPipeLandmarker.FACE, "face_landmarker", "portrait", 478],
-		[SaltsMediaPipeLandmarker.HAND, "hand_landmarker", "right_hands", 21],
-		[SaltsMediaPipeLandmarker.POSE, "pose_landmarker_lite", "pose", 33],
+		["MediaPipeFaceLandmarker", "face_landmarker", "portrait", "get_face_landmarks", 478],
+		["MediaPipeHandLandmarker", "hand_landmarker", "right_hands", "get_hand_landmarks", 21],
+		["MediaPipePoseLandmarker", "pose_landmarker_lite", "pose", "get_pose_landmarks", 33],
 	]
 	for test in cases:
-		var model := FileAccess.get_file_as_bytes("res://test-data/%s.task" % test[1])
-		var image := Image.load_from_file("res://test-data/%s.jpg" % test[2])
-		if not require(landmarker.open(model, test[0]) == OK, "Could not open " + test[1]):
+		var task := ClassDB.instantiate(test[0]) as Object
+		if not require(task != null and task.call("initialize", model_options(test[1])),
+				"Could not initialize " + test[0]):
 			return
-		var subjects := landmarker.detect(image)
-		if not require(landmarker.get_last_error() == OK and subjects.size() == 1 and
-				subjects[0].size() == test[3], "Wrong landmark count for " + test[1]):
+		var image := MediaPipeImage.new()
+		image.set_image(Image.load_from_file("res://test-data/%s.jpg" % test[2]))
+		if not check_landmarks(task.call("detect", image), test[3], test[4]):
 			return
-		for point in subjects[0]:
-			if not require(point.is_finite(), "Non-finite landmark for " + test[1]):
-				return
-		if not require(landmarker.close() == OK, "Could not close " + test[1]):
-			return
-		print("%s returned %d landmarks" % [test[1], test[3]])
+		print("%s returned %d landmarks" % [test[0], test[4]])
 
-	var face := FileAccess.get_file_as_bytes("res://test-data/face_landmarker.task")
+	var task := MediaPipeFaceLandmarker.new()
+	if not require(task.initialize(model_options("face_landmarker"), MediaPipeVisionTask.RUNNING_MODE_VIDEO),
+			"Could not initialize the face landmarker in video mode"):
+		return
 	var portrait := Image.load_from_file("res://test-data/portrait.jpg")
 	portrait.convert(Image.FORMAT_RGBA8)
-	if not require(landmarker.open(face, SaltsMediaPipeLandmarker.FACE, SaltsMediaPipeLandmarker.VIDEO) == OK,
-			"Could not open video landmarker"):
-		return
-	var first := landmarker.detect(portrait, 0)
-	if not require(landmarker.get_last_error() == OK and first.size() == 1 and
-			first[0].size() == 478, "Video mode did not process the RGBA frame"):
-		return
-	if not require(landmarker.detect(portrait, 0).is_empty() and
-			landmarker.get_last_error() == ERR_INVALID_PARAMETER, "Video accepted a repeated timestamp"):
-		return
-	var second := landmarker.detect(portrait, 33)
-	if not require(landmarker.get_last_error() == OK and second.size() == 1 and
-			second[0].size() == 478, "Video did not advance after the rejected timestamp"):
-		return
-	if not require(landmarker.close() == OK, "Could not close video landmarker"):
-		return
-	print("RGBA video inference and timestamp ordering passed")
+	var frame := MediaPipeImage.new()
+	frame.set_image(portrait)
+	for timestamp in [0, 33]:
+		if not check_landmarks(task.detect_video(frame, timestamp), "get_face_landmarks", 478):
+			return
+	print("RGBA video inference passed at two increasing timestamps")
 	quit(0)

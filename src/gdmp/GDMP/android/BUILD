@@ -23,9 +23,13 @@ cc_library(
 
 cc_binary(
     name = "GDMP",
-    linkopts = select({
-        "//conditions:default": ["-s"],
-    }),
+    linkopts = [
+        "-Wl,--exclude-libs,ALL",
+        "-Wl,-z,defs",
+        "-Wl,-z,max-page-size=16384",
+        "-Wl,-z,common-page-size=16384",
+        "-s",
+    ],
     linkshared = 1,
     visibility = ["//visibility:public"],
     deps = [

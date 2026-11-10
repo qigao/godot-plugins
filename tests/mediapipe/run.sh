@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-out=$(realpath -- "$1")
-godot=$(realpath -- "$2")
+out=$(cd -- "$1" && pwd)
+godot=$(cd -- "$(dirname -- "$2")" && pwd)/$(basename -- "$2")
 tests=$(cd -- "$(dirname -- "$0")" && pwd)
 project="$out/test-mediapipe"
 mkdir -p "$project/addons" "$project/.godot" "$project/test-data"
-cp -a "$out/addons/salts_mediapipe" "$project/addons/"
+cp -a "$out/addons/GDMP" "$project/addons/"
 cp "$tests/project.godot" "$tests/landmarker_smoke.gd" "$project/"
-printf '%s\n' 'res://addons/salts_mediapipe/salts_mediapipe.gdextension' > "$project/.godot/extension_list.cfg"
+printf '%s\n' 'res://addons/GDMP/GDMP.gdextension' > "$project/.godot/extension_list.cfg"
 
 fetch() {
     local url=$1 sha=$2 name=${1##*/}
@@ -16,7 +16,7 @@ fetch() {
         curl -fsSL --retry 3 "$url" -o "$project/test-data/$name.part"
         mv -- "$project/test-data/$name.part" "$project/test-data/$name"
     fi
-    printf '%s  %s\n' "$sha" "$project/test-data/$name" | sha256sum -c -
+    printf '%s  %s\n' "$sha" "$project/test-data/$name" | shasum -a 256 -c -
 }
 
 fetch https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task \

@@ -14,8 +14,8 @@ elf = subprocess.check_output(
 )
 if not re.search(r"Machine:\s+AArch64", elf) or not re.search(r"Type:\s+DYN\b", elf):
     raise SystemExit(f"{library.name} must be an AArch64 shared object")
-if not re.search(r"\bGLOBAL\s+DEFAULT\s+\d+\s+salts_mediapipe_init$", elf, re.MULTILINE):
-    raise SystemExit(f"{library.name} does not export salts_mediapipe_init")
+if not re.search(r"\bGLOBAL\s+DEFAULT\s+\d+\s+mediapipe_library_init$", elf, re.MULTILINE):
+    raise SystemExit(f"{library.name} does not export mediapipe_library_init")
 needed = set(re.findall(r"\(NEEDED\).*?\[([^\]]+)\]", elf))
 system_libs = {path.name for path in (ndk / "sysroot/usr/lib/aarch64-linux-android/26").glob("lib*.so")}
 unresolved = needed - system_libs
