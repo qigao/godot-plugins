@@ -1,6 +1,6 @@
 # Salts Camera: Godot GDExtension design
 
-M0 targets Godot 4.5.2 and the installed SaltsBase v0.1.2 SDK from source commit `16720e0a79ca01bca8b116d0d70c95b9f393b67f`. [SDK release](https://github.com/qigao/salts-base/releases/tag/v0.1.2)
+M0 targets Godot 4.5.2 and the installed SaltsBase v0.1.3 SDK from source commit `039d033c6f4a742dc5bac3b4e07908a3c4068a4f`. [SDK release](https://github.com/qigao/salts-base/releases/tag/v0.1.3)
 
 The Frame V2 and GPU frame roadmap is tracked in [salts-core #197](https://github.com/qigao/salts-core/issues/197). The Godot references are [godot-native-camera](https://github.com/godot-mobile-plugins/godot-native-camera) and [godot-cameraserver-extension](https://github.com/j20001970/godot-cameraserver-extension).
 
@@ -15,12 +15,12 @@ Godot scene / CameraTexture / script / raw frame consumer
                      |
             frame mailbox + CPU converter
                      |
-        SaltsBase v0.1.2 / Salts::Media
+        SaltsBase v0.1.3 / Salts::Media
                      |
  Windows MF | Linux V4L2 | Android NDK Camera2 | Apple AVFoundation
 ```
 
-1. The static `Salts::Media` target owns native Capture and Playback and publishes `capture.h` and `playback.h`. The camera adapter takes frames from Capture and displays them through Godot's `CameraFeed` and `CameraTexture`. [Media source in SaltsBase v0.1.2](https://github.com/qigao/salts-base/tree/v0.1.2/media)
+1. The static `Salts::Media` target owns native Capture and Playback and publishes `capture.h` and `playback.h`. The camera adapter takes frames from Capture and displays them through Godot's `CameraFeed` and `CameraTexture`. [Media source in SaltsBase v0.1.3](https://github.com/qigao/salts-base/tree/v0.1.3/media)
 2. Godot-specific code lives in the C++ **GDExtension**. TurboMedia and FlexUI can use the SaltsBase Media API directly.
 3. M0 uses `video_capture_cb` from `capture.h`. The adapter retains the exact `video_native_mode_t` selected through the live device handle and uses its format to interpret the callback's borrowed bytes, dimensions and microsecond timestamp.
 4. Frame V2 (`struct_size`, planes/stride, colorspace/timebase/rotation) is additive work in upstream issue #197. It is **not** a prerequisite to build the first CPU-based plugin. Native GPU sharing is a separate milestone.
@@ -81,10 +81,10 @@ Script raw access (opt-in):
 
 ## Build/dependency constraints
 
-Set `CMAKE_PREFIX_PATH` to the extracted SaltsBase SDK prefix and the matching vcpkg-cache v0.1.2 dependency prefix for the target triplet. The installed package supplies the public headers and imported target. The dependency prefix provides JPEG and `libyuv` for Linux, Windows and Android. [Dependency release](https://github.com/qigao/vcpkg-cache/releases/tag/v0.1.2)
+Set `CMAKE_PREFIX_PATH` to the extracted SaltsBase SDK prefix and the matching vcpkg-cache v0.1.3 dependency prefix for the target triplet. The installed package supplies the public headers and imported target. The dependency prefix provides JPEG and `libyuv` for Linux, Windows and Android. [Dependency release](https://github.com/qigao/vcpkg-cache/releases/tag/v0.1.3)
 
 ```cmake
-find_package(SaltsBase 0.1.2 EXACT CONFIG REQUIRED)
+find_package(SaltsBase 0.1.3 EXACT CONFIG REQUIRED)
 target_link_libraries(salts_camera PRIVATE Salts::Media)
 ```
 

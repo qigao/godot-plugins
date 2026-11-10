@@ -6,6 +6,16 @@ import re
 import subprocess
 
 
+def require_16k_load_alignment(name, headers):
+    loads = re.findall(r"^\s*LOAD .+ (0x[0-9a-fA-F]+)$", headers, re.MULTILINE)
+    if not loads:
+        raise SystemExit(f"{name} has no ELF LOAD segments")
+    alignment = min(int(value, 16) for value in loads)
+    if alignment < 16 * 1024:
+        raise SystemExit(f"{name} has {alignment} byte ELF load alignment, expected at least 16384")
+    return alignment
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("build", type=Path)
@@ -38,13 +48,11 @@ def main():
         unresolved = needed - system_libs - packaged_libs
         if unresolved:
             raise SystemExit(f"{library.name} has unstaged dependencies {sorted(unresolved)}")
-        alignment = min(int(value, 16) for value in re.findall(r"^\s*LOAD .+ (0x[0-9a-fA-F]+)$", elf, re.MULTILINE))
+        alignment = require_16k_load_alignment(library.name, elf)
         if resource == extension:
             symbol = rf"\bGLOBAL\s+DEFAULT\s+\d+\s+{re.escape(entry)}$"
             if not re.search(symbol, elf, re.MULTILINE) or "libcamera2ndk.so" not in needed:
                 raise SystemExit("Android camera extension must export its entry and link the NDK camera backend")
-            if alignment < 16 * 1024:
-                raise SystemExit("Android camera extension must use at least 16 KiB ELF load alignment")
         print(f"{library.name} verified with {alignment // 1024} KiB ELF load alignment and dependencies {sorted(needed)}")
 
 

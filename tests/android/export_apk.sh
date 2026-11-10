@@ -46,4 +46,4 @@ path.write_text('[gd_resource type="EditorSettings" format=3]\n\n[resource]\n' +
 PY
 
 "$godot" --headless --path "$project" --export-debug "Android Camera" "$apk"
-python3 "$tests/check_apk.py" "$apk" "$build" "$android_sdk/build-tools/35.0.0"
+python3 -B "$tests/check_apk.py" "$apk" "$build" "$android_sdk/build-tools/35.0.0"

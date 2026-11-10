@@ -4,7 +4,7 @@ Desktop CI builds the M0 extension and runs native TinyTest, a production-librar
 
 ## Source of truth
 
-- Pin the SaltsBase v0.1.2 SDK, the matching vcpkg-cache v0.1.2 dependency archive for its triplet, and an engine-compatible `godot-cpp` revision. Verify the SDK checksum against the release manifest. [SaltsBase release](https://github.com/qigao/salts-base/releases/tag/v0.1.2) · [vcpkg-cache release](https://github.com/qigao/vcpkg-cache/releases/tag/v0.1.2)
+- Pin the SaltsBase v0.1.3 SDK, the matching vcpkg-cache v0.1.3 dependency archive for its triplet, and an engine-compatible `godot-cpp` revision. Verify the SDK checksum against the release manifest. [SaltsBase release](https://github.com/qigao/salts-base/releases/tag/v0.1.3) · [vcpkg-cache release](https://github.com/qigao/vcpkg-cache/releases/tag/v0.1.3)
 - Carry forward the PulseAudio initialization failure under leak checking, iOS compatibility, physical-device and permission testing, and redistributable dependency closure as independent gates for the affected platforms. These gates predate the repository move. [Media release gate record](https://github.com/qigao/salts-core/blob/0a4eb95c03427fa5dd4ca5486162e24e52f0e0d2/media/release-blockers.json)
 - Disallow production duplicate camera drivers, fake cameras or fallback to a different explicit `mode_id`.
 
@@ -19,9 +19,9 @@ Desktop CI builds the M0 extension and runs native TinyTest, a production-librar
 
 Add iOS ARM64 and Windows ARM64 once matching SDKs ship. The iOS gate also requires a native link, Godot export and privacy metadata checks. For Linux x64 ThreadSanitizer runs, select the matching `linux-clang-x64-tsan` SDK and an instrumented plugin build.
 
-The Android APK gate checks API 26, the camera permission, ARM64-only native libraries, Godot's extension list, and byte equality with the built add-on. It verifies the debug signature and 16 KiB ZIP alignment. `libsalts_camera.so` also passes the 16 KiB ELF alignment check. The published v0.1.2 `libsalts.so` still has 4 KiB ELF load alignment, so the full package requires a matching aligned SaltsBase SDK before 16 KiB device qualification.
+The Android APK gate checks API 26, the camera permission, ARM64-only native libraries, Godot's extension list, and byte equality with the built add-on. It verifies the debug signature, 16 KiB ZIP alignment, and at least 16 KiB ELF load alignment for every packaged native library.
 
-Build and link the real extension from an extracted SDK on each target toolchain. In v0.1.2 the Linux export records absolute PipeWire and X11 library paths in `INTERFACE_LINK_LIBRARIES`. The macOS and Android exports record paths under the producer's `Xcode_16.4.app` and NDK `27.3.13750724` installations. Confirm those references resolve on the consumer runner before counting that platform as qualified. If paths differ, fix the export in SaltsBase and qualify the resulting published SDK.
+Build and link the real extension from an extracted SDK on each target toolchain. In v0.1.3 the Linux export records absolute PipeWire and X11 library paths in `INTERFACE_LINK_LIBRARIES`. The macOS and Android exports record paths under the producer's `Xcode_16.4.app` and NDK `27.3.13750724` installations. Confirm those references resolve on the consumer runner before counting that platform as qualified. If paths differ, fix the export in SaltsBase and qualify the resulting published SDK.
 
 No Mono, MSVC, installer/consumer test projects or probe-only CI; external archives may be fetched with curl from pinned, authenticated locations. CI must not claim real camera validation on runner hosts without cameras.
 

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.27)
 project(SaltsCamera LANGUAGES C CXX)
 
-find_package(SaltsBase 0.1.2 EXACT CONFIG REQUIRED)
+find_package(SaltsBase 0.1.3 EXACT CONFIG REQUIRED)
 set(GODOT_CPP_DIR "" CACHE PATH "godot-cpp checkout at e83fd0904c13356ed1d4c3d09f8bb9132bdc6b77")
 if(NOT EXISTS "${GODOT_CPP_DIR}/CMakeLists.txt")
   message(FATAL_ERROR "Set GODOT_CPP_DIR to the pinned godot-cpp source directory")
