@@ -1,0 +1,26 @@
+--- a/third_party/BUILD
++++ b/third_party/BUILD
+@@ -257,23 +257,11 @@
+             "OPENCV_BIN_INSTALL_PATH": "bin",
+             "OPENCV_LIB_INSTALL_PATH": "lib",
+         },
+-        "@platforms//os:emscripten": {
+-            "CPU_BASELINE": "''",
+-            "CPU_DISPATCH": "''",
+-            "BUILD_opencv_apps": "OFF",
+-            "WITH_VA": "OFF",
+-        },
+         "//conditions:default": {
+             "CMAKE_INSTALL_LIBDIR": "lib",
+         },
+     }),
+     lib_source = "@opencv//:all",
+-    copts = select({
+-        "@platforms//os:emscripten": [
+-            "-msimd128",
+-        ],
+-        "//conditions:default": None,
+-    }),
+     out_include_dir = select({
+         "@platforms//os:android": "sdk/native/jni/include",
+         "@platforms//os:windows": "include",

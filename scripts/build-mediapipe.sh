@@ -48,7 +48,8 @@ fetch https://releases.bazel.build/6.5.0/release/bazel-6.5.0-linux-x86_64 \
     a40ac69263440761199fcb8da47ad4e3f328cbe79ffbf4ecc14e5ba252857307 "$(basename -- "$bazel")"
 chmod +x "$bazel"
 
-if [[ ! -f "$deps/.prepared" ]]; then
+inputs=$(sha256sum "$repo/scripts/build-mediapipe.sh" "$sources/"{godot-cpp-profile.json,opencv-native.patch} | sha256sum)
+if [[ ! -f "$deps/.prepared" ]] || [[ "$(cat "$deps/.prepared")" != "$inputs" ]]; then
     fetch https://codeload.github.com/j20001970/GDMP/tar.gz/refs/tags/v0.6 \
         761fbfaf2505de9046eb61cc7a02516cecba9bf2116812c26ce83da4839056d8 GDMP-src-v0.6.tar.gz
     fetch https://codeload.github.com/google-ai-edge/mediapipe/tar.gz/80ae8afbd03465b0d6d9f9e874f8cacf093d23e9 \
@@ -62,6 +63,7 @@ if [[ ! -f "$deps/.prepared" ]]; then
     tar -xzf "$downloads/godot-cpp.tar.gz" --strip-components=1 -C "$godot_cpp"
 
     patch --batch --directory="$mediapipe" -p1 < "$deps/gdmp/patch/mediapipe/01-opencv.diff"
+    patch --batch --directory="$mediapipe" -p1 < "$sources/opencv-native.patch"
     python3 -B - "$godot_cpp" "$mediapipe" "$sources" <<'PY'
 import json
 from pathlib import Path
@@ -92,7 +94,7 @@ new_local_repository(
 android_ndk_repository(name = "androidndk", api_level = 26)
 ''')
 PY
-    touch "$deps/.prepared"
+    printf '%s\n' "$inputs" > "$deps/.prepared"
 fi
 
 (
