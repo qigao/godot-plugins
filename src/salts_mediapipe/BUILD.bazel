@@ -1,8 +1,3 @@
-platform(
-    name = "android_arm64",
-    constraint_values = ["@platforms//os:android", "@platforms//cpu:aarch64"],
-)
-
 cc_binary(
     name = "libsalts_mediapipe.so",
     srcs = [

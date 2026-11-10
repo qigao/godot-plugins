@@ -13,9 +13,10 @@ case "$platform" in
         library_dir=android/arm64
         export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/27.3.13750724"
         target_flags=(
-            --config=android_arm64
+            --config=android
+            --cpu=arm64-v8a
             --incompatible_enable_cc_toolchain_resolution
-            --platforms=@salts_mediapipe//:android_arm64
+            --platforms=//mediapipe:android_arm64_platform
             --extra_toolchains=@androidndk//:all
             --linkopt=-Wl,-z,max-page-size=16384
             --linkopt=-Wl,-z,common-page-size=16384
@@ -94,6 +95,7 @@ new_local_repository(
     path = "../godot-cpp",
 )
 android_ndk_repository(name = "androidndk", api_level = 26)
+bind(name = "android/crosstool", actual = "@androidndk//:toolchain")
 ''')
 PY
     printf '%s\n' "$inputs" > "$deps/.prepared"
