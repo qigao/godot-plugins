@@ -26,12 +26,21 @@ ARCHIVES = {
         "d4c03daf46c8bef4544614182b0762c3e32789151c7f8f44e8eb2053d5cddeba",
         "godot-cpp.tar.gz",
     ),
-    "ocv": (
-        f"{CODELOAD}/qigao/ocv/tar.gz/dcd5d534fd3cf16556fce562e42c9c5b8efb5dfe",
-        "2e37345245c72f6a6e3dced9f2c442833a140b7079c97dc565ba0d9de49063c4",
-        "ocv-gdmp-dcd5d534fd3c.tar.gz",
-    ),
 }
+OCV_SOURCE = (
+    f"{CODELOAD}/qigao/ocv/tar.gz/dcd5d534fd3cf16556fce562e42c9c5b8efb5dfe",
+    "2e37345245c72f6a6e3dced9f2c442833a140b7079c97dc565ba0d9de49063c4",
+    "ocv-gdmp-dcd5d534fd3c.tar.gz",
+)
+OCV_SDK_URL = "https://github.com/qigao/ocv/releases/download/v0.1.0"
+OCV_SDK_BUILD = SOURCE / "ocv-sdk.BUILD"
+OCV_SDK_SHA256 = {
+    "android-arm64": "58932c6c12100990e31be556c9351bc0cf3cf6b6b9e3100a39d6307c2589db8f",
+    "android-x64": "f3354d22f315fa61c25d4a2691581d6dbba6fe5b71c2dcb338a9a3c7c3e7ce6b",
+    "linux-arm64": "16ced3247662a09c0f1fa10832d6dc43fb68639d37fd09b13512cb1fc41b077d",
+    "linux-x64": "01fe644d9869c2ed2f79e6078f8fbaece6725d2175bbf2806a62d689d34f8237",
+}
+OCV_SDK_NDK = "27.3.13750724"
 ZLIB = (
     "https://zlib.net/fossils/zlib-1.2.13.tar.gz",
     "b3a24de97a8fdbc835b9833169501030b8977031bcb54b3b3ac13740f846ab30",
@@ -64,7 +73,7 @@ def fetch(downloads, asset):
     return archive
 
 
-def prepare(out, android):
+def prepare(out, android, ocv_sdk):
     dependencies = out / "source-gdmp"
     mediapipe = dependencies / "mediapipe"
     godot_cpp = dependencies / "godot-cpp"
@@ -73,17 +82,29 @@ def prepare(out, android):
     patches = sorted((SOURCE / "patch/mediapipe").glob("*.diff"))
     profile = SOURCE / "godot-cpp-profile.json"
     stamp = dependencies / ".prepared"
-    key = json.dumps([str(SOURCE), android, *(digest(path) for path in [Path(__file__), profile, *patches])])
+    inputs = [Path(__file__), profile, *patches]
+    if ocv_sdk:
+        inputs.append(OCV_SDK_BUILD)
+    key = json.dumps([str(SOURCE), android, ocv_sdk, *(digest(path) for path in inputs)])
     if stamp.is_file() and stamp.read_text(encoding="utf-8") == key:
         return mediapipe
 
     if dependencies.exists():
         shutil.rmtree(dependencies)
-    for name, asset in ARCHIVES.items():
+    archives = ARCHIVES if ocv_sdk else ARCHIVES | {"ocv": OCV_SOURCE}
+    for name, asset in archives.items():
         archive = fetch(downloads, asset)
         destination = dependencies / name
         destination.mkdir(parents=True)
         subprocess.run(["tar", "-xzf", archive, "--strip-components=1", "-C", destination], check=True)
+    if ocv_sdk:
+        name = f"opencv-4.11.0-static-{ocv_sdk}.tar.gz"
+        archive = fetch(downloads, (f"{OCV_SDK_URL}/{name}", OCV_SDK_SHA256[ocv_sdk], name))
+        sdk = dependencies / "ocv/bazel"
+        sdk.mkdir(parents=True)
+        subprocess.run(["tar", "-xzf", archive, "-C", sdk], check=True)
+        (sdk.parent / "WORKSPACE").write_text('workspace(name = "qigao_ocv")\n', encoding="utf-8")
+        shutil.copyfile(OCV_SDK_BUILD, sdk / "BUILD.bazel")
     fetch(downloads, ZLIB)
 
     # Apply these patches to the pinned MediaPipe release outside its Git tree.
@@ -106,6 +127,11 @@ def prepare(out, android):
     contents = workspace.read_text(encoding="utf-8").replace(
         'path = "../",', f"path = {json.dumps(SOURCE.as_posix())},", 1
     )
+    if not ocv_sdk:
+        contents += (
+            '\nload("@qigao_ocv//bazel:repositories.bzl", "ocv_repositories")\n'
+            'ocv_repositories()\n'
+        )
     if android:
         contents += (
             '\nandroid_ndk_repository(name = "androidndk", api_level = 26)\n'
@@ -162,15 +188,20 @@ def target_options(target, arch, host):
     return []
 
 
-def stage_addon(out, mediapipe, target, arch, host):
+def stage_addon(out, mediapipe, target, arch, host, ocv_sdk):
     output = mediapipe / "bazel-bin/external/GDMP/GDMP" / target
     addon = out / "addons/GDMP"
     shutil.copytree(ADDON, addon, dirs_exist_ok=True)
+    ocv_license = (
+        mediapipe.parent / "ocv/bazel/LICENSE"
+        if ocv_sdk
+        else mediapipe / "bazel-mediapipe/external/qigao_opencv_source/LICENSE"
+    )
     for license_path, name in [
         (SOURCE / "LICENSE", "LICENSE"),
         (mediapipe / "LICENSE", "LICENSE.MediaPipe"),
         (mediapipe.parent / "godot-cpp/LICENSE.md", "LICENSE.godot-cpp"),
-        (mediapipe / "bazel-mediapipe/external/qigao_opencv_source/LICENSE", "LICENSE.OpenCV"),
+        (ocv_license, "LICENSE.OpenCV"),
     ]:
         shutil.copyfile(license_path, addon / name)
     libraries = addon / "libs"
@@ -198,6 +229,8 @@ def main():
     parser.add_argument("--out", type=Path, default=Path("build-mediapipe"))
     parser.add_argument("--bazel", default="bazel", help="path to Bazel 6.5.0")
     parser.add_argument("--jobs", type=int, default=4)
+    parser.add_argument("--opencv", choices=["source", "sdk"], default="source",
+                        help="use the pinned OpenCV source profile or the OCV v0.1.0 SDK")
     args = parser.parse_args()
     host = platform.system()
     host_arch = {"aarch64": "arm64", "amd64": "x86_64"}.get(
@@ -207,8 +240,25 @@ def main():
     if args.target == "desktop" and host != "Darwin" and arch != host_arch:
         parser.error("Desktop builds on Linux and Windows use the host architecture.")
 
+    ocv_sdk = None
+    if args.opencv == "sdk":
+        sdk_os = {"android": "android", "desktop": {"Linux": "linux"}.get(host)}.get(args.target)
+        sdk_arch = {"arm64": "arm64", "x86_64": "x64"}.get(arch)
+        ocv_sdk = f"{sdk_os}-{sdk_arch}"
+        if ocv_sdk not in OCV_SDK_SHA256:
+            parser.error("The OCV SDK build supports Linux and Android on x64 and ARM64.")
+
+    build_env = os.environ.copy()
+    if args.target == "android":
+        ndk = Path(build_env["ANDROID_NDK_HOME"]).resolve()
+        build_env["ANDROID_NDK_HOME"] = str(ndk)
+        if ocv_sdk:
+            properties = (ndk / "source.properties").read_text(encoding="utf-8")
+            if f"Pkg.Revision = {OCV_SDK_NDK}" not in properties.splitlines():
+                parser.error(f"The OCV SDK requires Android NDK {OCV_SDK_NDK}.")
+
     out = args.out.resolve()
-    mediapipe = prepare(out, args.target == "android")
+    mediapipe = prepare(out, args.target == "android", ocv_sdk)
     bazel = shutil.which(args.bazel)
     if not bazel:
         parser.error(f"Bazel executable {args.bazel} is unavailable.")
@@ -220,9 +270,6 @@ def main():
         flags.append("--define=MEDIAPIPE_DISABLE_GPU=1")
     if host != "Windows":
         flags += ["--copt=-fPIC", "--cxxopt=-std=c++17", "--host_cxxopt=-std=c++17"]
-    build_env = os.environ.copy()
-    if args.target == "android":
-        build_env["ANDROID_NDK_HOME"] = str(Path(build_env["ANDROID_NDK_HOME"]).resolve())
     subprocess.run(
         [
             Path(bazel).resolve(), f"--output_user_root={out / 'bazel'}", "build", "-c", "opt",
@@ -234,7 +281,7 @@ def main():
         env=build_env,
         check=True,
     )
-    stage_addon(out, mediapipe, args.target, arch, host)
+    stage_addon(out, mediapipe, args.target, arch, host, ocv_sdk)
 
 
 if __name__ == "__main__":

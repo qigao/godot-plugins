@@ -1,7 +1,7 @@
 diff --git a/WORKSPACE b/WORKSPACE
 --- a/WORKSPACE
 +++ b/WORKSPACE
-@@ -2,6 +2,49 @@ workspace(name = "mediapipe")
+@@ -2,6 +2,47 @@ workspace(name = "mediapipe")
  
  load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
  
@@ -45,8 +45,6 @@ diff --git a/WORKSPACE b/WORKSPACE
 +)
 +
 +local_repository(name = "qigao_ocv", path = "../ocv")
-+load("@qigao_ocv//bazel:repositories.bzl", "ocv_repositories")
-+ocv_repositories()
 +
  # Protobuf expects an //external:python_headers target
  bind(
