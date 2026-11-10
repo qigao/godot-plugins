@@ -11,7 +11,7 @@ python3 src/gdmp/build.py desktop
 python3 src/gdmp/build.py android --arch arm64
 ```
 
-Pass `--opencv sdk` to statically link the checksum-pinned [OCV v0.1.0 SDK](https://github.com/qigao/ocv/releases/tag/v0.1.0) on Linux or Android x64 and ARM64. Linux SDK packages target the Ubuntu 24.04 toolchain. Android SDK packages use NDK 27.3.13750724 and API 26. CI uses SDK mode on Linux x64 and Android ARM64.
+Pass `--opencv sdk` to statically link the checksum-pinned [OCV v0.1.0 SDK](https://github.com/qigao/ocv/releases/tag/v0.1.0) on Linux or Android x64 and ARM64. Linux SDK packages target the Ubuntu 24.04 toolchain. Android SDK packages use NDK 27.3.13750724 and API 26. CI uses SDK mode on both Linux and Android architectures.
 
 The source profile is the default. macOS uses it to preserve deployment compatibility because the v0.1.0 macOS archives target macOS 15.
 
@@ -19,10 +19,10 @@ Copy `build-mediapipe/addons/GDMP` to the Godot project's `addons/` directory, o
 
 | Target | Architectures | CI coverage |
 | --- | --- | --- |
-| Linux | x86_64, arm64 | x86_64 Godot inference |
-| macOS | arm64, x86_64 | arm64 Godot inference |
-| Android | arm64, x86_64 | arm64 link, dependencies, and 16 KiB ELF alignment |
-| Windows | x86_64 | Upstream desktop configuration |
+| Linux | x86_64, arm64 | Godot inference and the combined camera demo on both |
+| macOS | arm64, x86_64 | Godot inference on both |
+| Android | arm64, x86_64 | Link, dependencies, and 16 KiB ELF alignment on both |
+| Windows | x86_64 | Upstream desktop configuration. CI requires an LLVM-MinGW build. |
 | iOS | arm64 and simulators | Upstream XCFramework configuration |
 | Web | wasm32 | Upstream Emscripten configuration |
 

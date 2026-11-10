@@ -53,6 +53,16 @@ jobs:
             godot_asset: Godot_v4.5.2-stable_linux.x86_64.zip
             godot_sha: 87f6e6be292929e363d15ed9052f277b2ba4e95ed994e1e099048097be2dfd03
             godot_bin: Godot_v4.5.2-stable_linux.x86_64
+          - platform: linux-arm64
+            runner: ubuntu-24.04-arm
+            target: desktop
+            arch: arm64
+            opencv: sdk
+            bazel: bazel-6.5.0-linux-arm64
+            bazel_sha: 5afe973cadc036496cac66f1414ca9be36881423f576db363d83afc9084c0c2f
+            godot_asset: Godot_v4.5.2-stable_linux.arm64.zip
+            godot_sha: 97ad6d1b74020bd591520e4f8810c6a07451af75eefa0932f57daeb805124618
+            godot_bin: Godot_v4.5.2-stable_linux.arm64
           - platform: macos-arm64
             runner: macos-15
             target: desktop
@@ -63,10 +73,27 @@ jobs:
             godot_asset: Godot_v4.5.2-stable_macos.universal.zip
             godot_sha: 2a3f35cf5813b0d26e3f4c15dabc5e7c58407fceec7bae5291740772f72d141a
             godot_bin: Godot.app/Contents/MacOS/Godot
+          - platform: macos-x64
+            runner: macos-15-intel
+            target: desktop
+            arch: x86_64
+            opencv: source
+            bazel: bazel-6.5.0-darwin-x86_64
+            bazel_sha: bbf9c2c03bac48e0514f46db0295027935535d91f6d8dcd960c53393559eab29
+            godot_asset: Godot_v4.5.2-stable_macos.universal.zip
+            godot_sha: 2a3f35cf5813b0d26e3f4c15dabc5e7c58407fceec7bae5291740772f72d141a
+            godot_bin: Godot.app/Contents/MacOS/Godot
           - platform: android-arm64
             runner: ubuntu-24.04
             target: android
             arch: arm64
+            opencv: sdk
+            bazel: bazel-6.5.0-linux-x86_64
+            bazel_sha: a40ac69263440761199fcb8da47ad4e3f328cbe79ffbf4ecc14e5ba252857307
+          - platform: android-x64
+            runner: ubuntu-24.04
+            target: android
+            arch: x86_64
             opencv: sdk
             bazel: bazel-6.5.0-linux-x86_64
             bazel_sha: a40ac69263440761199fcb8da47ad4e3f328cbe79ffbf4ecc14e5ba252857307
@@ -125,22 +152,25 @@ jobs:
           unzip -q "$RUNNER_TEMP/$ASSET" -d "$RUNNER_TEMP/godot"
           bash tests/mediapipe/run.sh build-mediapipe "$RUNNER_TEMP/godot/$GODOT_BIN"
       - name: Run the imported demo with both native add-ons
-        if: matrix.platform == 'linux-x64'
+        if: startsWith(matrix.platform, 'linux-')
         shell: bash
         env:
+          ARCH: ${{ matrix.arch }}
           GODOT_BIN: ${{ matrix.godot_bin }}
         run: |
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends libpipewire-0.3-dev libx11-dev libxext-dev
           godot="$RUNNER_TEMP/godot/$GODOT_BIN"
-          bash tests/mediapipe/build_demo_camera.sh "$RUNNER_TEMP/demo-camera-inputs" "$godot"
+          bash tests/mediapipe/build_demo_camera.sh "$RUNNER_TEMP/demo-camera-inputs" "$godot" "$ARCH"
           bash tests/mediapipe/run_demo.sh build-mediapipe "$godot" build-demo-camera
-      - name: Check the Android ARM64 library
+      - name: Check the Android library
         if: matrix.target == 'android'
+        env:
+          ARCH: ${{ matrix.arch }}
         run: |
           python3 -B tests/mediapipe/check_android.py \
-            build-mediapipe/addons/GDMP/libs/arm64/libGDMP.android.so \
-            "$ANDROID_HOME/ndk/27.3.13750724"
+            "build-mediapipe/addons/GDMP/libs/$ARCH/libGDMP.android.so" \
+            "$ANDROID_HOME/ndk/27.3.13750724" "$ARCH"
       - uses: actions/upload-artifact@v7.0.2
         with:
           name: GDMP-${{ matrix.platform }}
