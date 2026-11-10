@@ -8,14 +8,6 @@ cc_import(
     static_library = "lib/libopencv_core.a",
 )
 
-cc_import(
-    name = "cpufeatures",
-    static_library = select({
-        "@platforms//cpu:arm64": "sdk/native/3rdparty/libs/arm64-v8a/libcpufeatures.a",
-        "@platforms//cpu:x86_64": "sdk/native/3rdparty/libs/x86_64/libcpufeatures.a",
-    }),
-)
-
 cc_library(
     name = "opencv",
     hdrs = glob([
@@ -35,7 +27,7 @@ cc_library(
         ":core",
         "@zlib//:zlib",
     ] + select({
-        "@platforms//os:android": [":cpufeatures"],
+        "@platforms//os:android": ["@androidndk//:cpufeatures"],
         "//conditions:default": [],
     }),
     visibility = ["//visibility:public"],
