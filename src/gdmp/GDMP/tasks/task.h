@@ -54,7 +54,6 @@ class MediaPipeTaskBaseOptions : public RefCounted {
 	private:
 		PackedByteArray model_asset_buffer;
 		String model_asset_path;
-		int delegate;
 
 	protected:
 		static void _bind_methods();

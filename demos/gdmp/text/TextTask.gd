@@ -2,7 +2,6 @@ class_name TextTask
 extends Control
 
 var request: HTTPRequest
-var delegate := MediaPipeTaskBaseOptions.DELEGATE_CPU
 
 @onready var external_files_disabled: Label = $VBoxContainer/ExternalFileDisabled
 @onready var progress_bar: ProgressBar = $VBoxContainer/ProgressBar
@@ -34,6 +33,11 @@ func _get_external_file() -> void:
 	output_label.show()
 	request = null
 	_init_task()
+
+func _task_initialization_failed() -> void:
+	input_text.editable = false
+	output_label.show()
+	output_label.text = "Could not initialize GPU inference for this model."
 
 func _init_task() -> void:
 	input_text.editable = true

@@ -237,8 +237,12 @@ def main():
         platform.machine().lower(), platform.machine().lower()
     )
     arch = args.arch or host_arch
-    if args.target == "desktop" and host != "Darwin" and arch != host_arch:
-        parser.error("Desktop builds on Linux and Windows use the host architecture.")
+    if args.target == "desktop" and host not in {"Linux", "Darwin"}:
+        parser.error("GPU builds on desktop currently require Linux EGL or macOS Metal.")
+    if args.target == "web":
+        parser.error("The WebAssembly build has no MediaPipe GPU inference backend.")
+    if args.target == "desktop" and host == "Linux" and arch != host_arch:
+        parser.error("Desktop builds on Linux use the host architecture.")
 
     ocv_sdk = None
     if args.opencv == "sdk":
@@ -266,8 +270,8 @@ def main():
         "--repo_env=HERMETIC_PYTHON_VERSION=3.12",
         "--action_env=PYTHONHASHSEED=0",
     ]
-    if args.target not in {"android", "ios"}:
-        flags.append("--define=MEDIAPIPE_DISABLE_GPU=1")
+    if args.target == "desktop" and host == "Linux":
+        flags += ["--copt=-DEGL_NO_X11", "--copt=-DMESA_EGL_NO_X11_HEADERS"]
     if host != "Windows":
         flags += ["--copt=-fPIC", "--cxxopt=-std=c++17", "--host_cxxopt=-std=c++17"]
     subprocess.run(

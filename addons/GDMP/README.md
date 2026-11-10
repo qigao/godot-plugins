@@ -6,7 +6,7 @@ GDMP is a native Godot 4.5 add-on for MediaPipe graphs and tasks. It accepts God
 
 ### Build against a MediaPipe SDK
 
-On Linux x64 and ARM64, the CMake build consumes the native MediaPipe Tasks SDK from [qigao/mediapipe](https://github.com/qigao/mediapipe). Extract the matching SDK and point CMake at its installation prefix. The SDK includes the OpenCV libraries selected by its build.
+On Linux x64 and ARM64, the CMake build consumes the native MediaPipe Tasks SDK from [qigao/mediapipe](https://github.com/qigao/mediapipe). Extract the matching SDK and point CMake at its installation prefix. Use the GPU-enabled SDK and install the EGL and OpenGL ES development libraries. The SDK includes the OpenCV libraries selected by its build.
 
 ```sh
 cmake -S src/gdmp -B build-gdmp-sdk -G Ninja -DCMAKE_BUILD_TYPE=Release \
@@ -31,16 +31,20 @@ The source profile is the default. macOS uses it to preserve deployment compatib
 
 Copy `build-mediapipe/addons/GDMP` to the Godot project's `addons/` directory, open the project in Godot, and enable **GDMP** under **Project Settings → Plugins**. Build several targets into the same output directory to assemble a multi-platform add-on.
 
-| Target | Architectures | CI coverage |
+| Target | Architectures | Inference backend |
 | --- | --- | --- |
-| Linux | x86_64, arm64 | x86_64 Godot inference |
-| macOS | arm64, x86_64 | arm64 Godot inference |
-| Android | arm64, x86_64 | arm64 link, dependencies, and 16 KiB ELF alignment |
-| Windows | x86_64 | Upstream desktop configuration |
-| iOS | arm64 and simulators | Upstream XCFramework configuration |
-| Web | wasm32 | Upstream Emscripten configuration |
+| Linux | x86_64, arm64 | EGL and OpenGL ES 3.1+ |
+| macOS | arm64, x86_64 | Metal inference |
+| Android | arm64, x86_64 | EGL and OpenGL ES 3.1+ |
+| Windows | x86_64, arm64 | GPU backend port required |
+| iOS | arm64 and simulators | Metal inference |
+| Web | wasm32 | GPU inference backend required |
 
 [Native source and dependency pins](../../src/gdmp/UPSTREAM.md)
+
+GDMP requires the GPU delegate for MediaPipe Tasks. An explicit GPU request fails if MediaPipe cannot select a GPU inference calculator. Some upstream pipelines still use separate CPU stages, including gesture classification and optional face blendshape inference. The Godot demo uses the GPU delegate for its tasks and displays results through the Compatibility renderer.
+
+Linux CI uses surfaceless EGL to exercise the OpenGL ES code path. A software Mesa renderer can run that check, so physical GPU compatibility requires device testing.
 
 ## Process a camera frame
 

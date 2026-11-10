@@ -42,7 +42,11 @@ jobs:
       - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - name: Build GDMP and run inference
+      - name: Install EGL and OpenGL ES libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends libegl-dev libgles-dev libegl-mesa0 libgl1-mesa-dri
+      - name: Build GDMP and run GPU inference
         shell: bash
         env:
           ARCH: ${{ matrix.arch }}
@@ -50,6 +54,7 @@ jobs:
           SDK_SHA: ${{ matrix.sdk_sha }}
           GODOT_ARCH: ${{ matrix.godot_arch }}
           GODOT_SHA: ${{ matrix.godot_sha }}
+          EGL_PLATFORM: surfaceless
         run: |
           [[ "$SDK_TAG" =~ ^sdk-v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.-]+)?$ ]]
           [[ "$SDK_SHA" =~ ^[0-9a-f]{64}$ ]]

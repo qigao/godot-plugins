@@ -13,7 +13,6 @@ const CAMERA_FORMATS := {
 
 var request: HTTPRequest
 var running_mode := MediaPipeVisionTask.RUNNING_MODE_IMAGE
-var delegate := MediaPipeTaskBaseOptions.DELEGATE_CPU
 var camera_manager := SaltsCameraManager.new()
 var camera_device: SaltsCameraDevice
 var camera_feed: SaltsCameraFeed
@@ -27,7 +26,6 @@ var last_video_timestamp_ms := -1
 @onready var image_view: TextureRect = $VBoxContainer/Image
 @onready var video_player: VideoStreamPlayer = $Video
 @onready var btn_back: Button = $VBoxContainer/Title/Back
-@onready var opt_delegate: OptionButton = $VBoxContainer/Title/OptionDelegate
 @onready var btn_load_image: Button = $VBoxContainer/Buttons/LoadImage
 @onready var btn_load_video: Button = $VBoxContainer/Buttons/LoadVideo
 @onready var btn_open_camera: Button = $VBoxContainer/Buttons/OpenCamera
@@ -47,7 +45,6 @@ func _exit_tree() -> void:
 
 func _ready():
 	btn_back.pressed.connect(self._back)
-	opt_delegate.item_selected.connect(self._delegate_selected)
 	btn_load_image.pressed.connect(self._open_image)
 	btn_load_video.pressed.connect(self._open_video)
 	btn_open_camera.pressed.connect(self._open_camera)
@@ -78,7 +75,7 @@ func _process(_delta: float) -> void:
 			_process_video(_prepare_image(image), timestamp_ms)
 
 func _prepare_image(image: Image) -> Image:
-	image.convert(Image.FORMAT_RGBA8 if delegate == MediaPipeTaskBaseOptions.DELEGATE_GPU else Image.FORMAT_RGB8)
+	image.convert(Image.FORMAT_RGBA8)
 	return image
 
 func _reset() -> void:
@@ -93,11 +90,6 @@ func _back() -> void:
 	_reset()
 	Global.go_to_main_scene()
 
-func _delegate_selected(index: int) -> void:
-	_reset()
-	delegate = index as MediaPipeTaskBaseOptions.Delegate
-	_init_task()
-
 func _get_external_file() -> void:
 	progress_bar.hide()
 	image_view.show()
@@ -105,9 +97,6 @@ func _get_external_file() -> void:
 	_init_task()
 
 func _init_task() -> void:
-	opt_delegate.disabled = false
-	if OS.get_name() != "Android":
-		opt_delegate.set_item_disabled(1, true)
 	btn_load_image.disabled = false
 	btn_load_video.disabled = false
 	btn_open_camera.disabled = false
@@ -117,7 +106,7 @@ func _task_initialization_failed() -> void:
 	btn_load_video.disabled = true
 	btn_open_camera.disabled = true
 	permission_dialog.title = "GDMP"
-	permission_dialog.dialog_text = "Could not initialize the vision task with this model and delegate."
+	permission_dialog.dialog_text = "Could not initialize GPU inference for this model."
 	permission_dialog.popup_centered()
 
 func _open_image() -> void:

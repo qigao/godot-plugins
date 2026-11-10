@@ -1,6 +1,12 @@
 #include "task.h"
 
 #include "godot_cpp/core/class_db.hpp"
+#include "godot_cpp/core/error_macros.hpp"
+#include "mediapipe/framework/port.h"
+
+#if MEDIAPIPE_DISABLE_GPU
+#error "GDMP requires a GPU-enabled MediaPipe build"
+#endif
 
 void MediaPipeTaskBaseOptions::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_model_asset_buffer"), &MediaPipeTaskBaseOptions::get_model_asset_buffer);
@@ -34,11 +40,11 @@ void MediaPipeTaskBaseOptions::set_model_asset_path(const String &path) {
 }
 
 MediaPipeTaskBaseOptions::Delegate MediaPipeTaskBaseOptions::get_delegate() {
-	return Delegate(delegate);
+	return DELEGATE_GPU;
 }
 
 void MediaPipeTaskBaseOptions::set_delegate(Delegate delegate) {
-	this->delegate = delegate;
+	ERR_FAIL_COND_MSG(delegate != DELEGATE_GPU, "GDMP requires the GPU delegate.");
 }
 
 std::unique_ptr<BaseOptions> MediaPipeTaskBaseOptions::get_base_options() {
@@ -46,7 +52,7 @@ std::unique_ptr<BaseOptions> MediaPipeTaskBaseOptions::get_base_options() {
 	if (model_asset_buffer.size())
 		base_options->model_asset_buffer = std::make_unique<std::string>((char *)model_asset_buffer.ptr(), model_asset_buffer.size());
 	base_options->model_asset_path = model_asset_path.utf8().get_data();
-	base_options->delegate = BaseOptions::Delegate(delegate);
+	base_options->delegate = BaseOptions::GPU;
 	return std::move(base_options);
 }
 

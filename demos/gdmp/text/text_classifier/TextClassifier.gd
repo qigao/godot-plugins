@@ -8,12 +8,13 @@ func _init_task() -> void:
 	if file == null:
 		return
 	var base_options := MediaPipeTaskBaseOptions.new()
-	base_options.delegate = delegate
 	base_options.model_asset_buffer = file.get_buffer(file.get_length())
 	var classifier_options := MediaPipeClassifierOptions.new()
 	classifier_options.score_threshold = 0.5
 	task = MediaPipeTextClassifier.new()
-	task.initialize(base_options, classifier_options)
+	if not task.initialize(base_options, classifier_options):
+		_task_initialization_failed()
+		return
 	super()
 
 func _process_text(text: String) -> void:
