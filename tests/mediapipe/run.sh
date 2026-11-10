@@ -5,7 +5,7 @@ out=$(cd -- "$1" && pwd)
 godot=$(cd -- "$(dirname -- "$2")" && pwd)/$(basename -- "$2")
 tests=$(cd -- "$(dirname -- "$0")" && pwd)
 project="$out/test-mediapipe"
-mkdir -p "$project/addons" "$project/test-data"
+mkdir -p "$project/addons" "$project/test-data" "$project/.godot"
 cp -a "$out/addons/GDMP" "$project/addons/"
 cp "$tests/project.godot" "$tests/landmarker_smoke.gd" "$project/"
 
@@ -31,7 +31,6 @@ fetch https://storage.googleapis.com/mediapipe-assets/right_hands.jpg \
 fetch https://storage.googleapis.com/mediapipe-assets/pose.jpg \
     c8a830ed683c0276d713dd5aeda28f415f10cd6291972084a40d0d8b934ed62b
 
-# Let Godot finish generating GDExtension docs before its import process exits.
-# https://github.com/godotengine/godot/issues/111048
-"$godot" --headless --editor --path "$project" --import --frame-delay 1000
+# The smoke test reads raw images and model files directly at runtime.
+printf '%s\n' 'res://addons/GDMP/GDMP.gdextension' > "$project/.godot/extension_list.cfg"
 "$godot" --headless --path "$project" --script res://landmarker_smoke.gd
