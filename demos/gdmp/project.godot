@@ -12,20 +12,20 @@ config_version=5
 
 config/name="GDMP Demo"
 config/description="Demo project for GDMP plugin"
-run/main_scene="uid://c5lpjegcml0ma"
-config/features=PackedStringArray("4.7", "GL Compatibility")
+run/main_scene="res://Main.tscn"
+config/features=PackedStringArray("4.5", "GL Compatibility")
 config/icon="res://icon.svg"
 
 [audio]
 
-buses/default_bus_layout="uid://dxlnje1yatnlq"
+buses/default_bus_layout="res://default_bus_layout.tres"
 driver/enable_input=true
 
 [autoload]
 
-MediaPipeExternalFiles="*uid://d3neb5cwnsvqs"
-GDMPAndroid="*uid://ccp6gbqbg33bg"
-Global="*uid://0xgy88c4glpb"
+MediaPipeExternalFiles="*res://addons/GDMP/MediaPipeExternalFiles.gd"
+GDMPAndroid="*res://addons/GDMP/GDMPAndroid.gd"
+Global="*res://Global.gd"
 
 [display]
 
@@ -34,11 +34,7 @@ window/stretch/aspect="expand"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/CameraServerExtension/plugin.cfg", "res://addons/GDMP/plugin.cfg", "res://addons/gut/plugin.cfg")
-
-[physics]
-
-3d/physics_engine="Jolt Physics"
+enabled=PackedStringArray("res://addons/salts_camera_apk/plugin.cfg")
 
 [rendering]
 

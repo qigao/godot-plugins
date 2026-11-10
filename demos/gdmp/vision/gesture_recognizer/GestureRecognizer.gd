@@ -6,9 +6,6 @@ var renderer: MediaPipeHandRenderer
 
 @onready var lbl_gesture: Label = $VBoxContainer/Image/Gesture
 
-func _result_callback(result: MediaPipeGestureRecognizerResult, image: MediaPipeImage, _timestamp_ms: int) -> void:
-	show_result(image, result)
-
 func _init_task() -> void:
 	var file := get_external_model(task_file)
 	if file == null:
@@ -17,8 +14,9 @@ func _init_task() -> void:
 	base_options.delegate = delegate
 	base_options.model_asset_buffer = file.get_buffer(file.get_length())
 	task = MediaPipeGestureRecognizer.new()
-	task.initialize(base_options, running_mode)
-	task.result_callback.connect(self._result_callback)
+	if not task.initialize(base_options, running_mode):
+		_task_initialization_failed()
+		return
 	renderer = MediaPipeHandRenderer.new()
 	super()
 
@@ -33,9 +31,6 @@ func _process_video(image: Image, timestamp_ms: int) -> void:
 	input_image.set_image(image)
 	var result := task.recognize_video(input_image, timestamp_ms)
 	show_result(input_image, result)
-
-func _process_camera(image: MediaPipeImage, timestamp_ms: int) -> void:
-	task.recognize_async(image, timestamp_ms)
 
 func show_result(image: MediaPipeImage, result: MediaPipeGestureRecognizerResult) -> void:
 	var gesture_text := ""

@@ -12,7 +12,6 @@ var tasks_vision := {
 	"Face Landmarker": "res://vision/face_landmarker/FaceLandmarker.tscn",
 	"Gesture Recognizer": "res://vision/gesture_recognizer/GestureRecognizer.tscn",
 	"Hand Landmarker": "res://vision/hand_landmarker/HandLandmarker.tscn",
-	"Holistic Landmarker": "res://vision/holistic_landmarker/HolisticLandmarker.tscn",
 	"Image Classifier": "res://vision/image_classifier/ImageClassifier.tscn",
 	"Image Embedder": "res://vision/image_embedder/ImageEmbedder.tscn",
 	"Image Segmenter": "res://vision/image_segmenter/ImageSegmenter.tscn",

@@ -5,6 +5,13 @@ on:
     paths:
       - '.github/workflows/salts-mediapipe.yml'
       - 'addons/GDMP/**'
+      - 'addons/salts_camera/**'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'demos/gdmp/**'
+      - 'src/salts_camera/**'
+      - 'tests/android/export_project/addons/salts_camera_apk/**'
+      - 'tests/godot/preview_fixture.*'
       - 'src/gdmp/**'
       - 'tests/mediapipe/**'
       - 'tests/android/check_bundle.py'
@@ -13,6 +20,13 @@ on:
     paths:
       - '.github/workflows/salts-mediapipe.yml'
       - 'addons/GDMP/**'
+      - 'addons/salts_camera/**'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'demos/gdmp/**'
+      - 'src/salts_camera/**'
+      - 'tests/android/export_project/addons/salts_camera_apk/**'
+      - 'tests/godot/preview_fixture.*'
       - 'src/gdmp/**'
       - 'tests/mediapipe/**'
       - 'tests/android/check_bundle.py'
@@ -110,6 +124,17 @@ jobs:
           printf '%s  %s\n' "$SHA" "$RUNNER_TEMP/$ASSET" | shasum -a 256 -c -
           unzip -q "$RUNNER_TEMP/$ASSET" -d "$RUNNER_TEMP/godot"
           bash tests/mediapipe/run.sh build-mediapipe "$RUNNER_TEMP/godot/$GODOT_BIN"
+      - name: Run the imported demo with both native add-ons
+        if: matrix.platform == 'linux-x64'
+        shell: bash
+        env:
+          GODOT_BIN: ${{ matrix.godot_bin }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends libpipewire-0.3-dev libx11-dev libxext-dev
+          godot="$RUNNER_TEMP/godot/$GODOT_BIN"
+          bash tests/mediapipe/build_demo_camera.sh "$RUNNER_TEMP/demo-camera-inputs" "$godot"
+          bash tests/mediapipe/run_demo.sh build-mediapipe "$godot" build-demo-camera
       - name: Check the Android ARM64 library
         if: matrix.target == 'android'
         run: |

@@ -6,9 +6,6 @@ var renderer: MediaPipeFaceRenderer
 
 @onready var lbl_blendshapes: Label = $VBoxContainer/Image/Blendshapes
 
-func _result_callback(result: MediaPipeFaceLandmarkerResult, image: MediaPipeImage, _timestamp_ms: int) -> void:
-	show_result(image, result)
-
 func _init_task() -> void:
 	var file := get_external_model(task_file)
 	if file == null:
@@ -17,8 +14,9 @@ func _init_task() -> void:
 	base_options.delegate = delegate
 	base_options.model_asset_buffer = file.get_buffer(file.get_length())
 	task = MediaPipeFaceLandmarker.new()
-	task.initialize(base_options, running_mode, 1, 0.5, 0.5, 0.5, true)
-	task.result_callback.connect(self._result_callback)
+	if not task.initialize(base_options, running_mode, 1, 0.5, 0.5, 0.5, true):
+		_task_initialization_failed()
+		return
 	renderer = MediaPipeFaceRenderer.new()
 	super()
 
@@ -33,9 +31,6 @@ func _process_video(image: Image, timestamp_ms: int) -> void:
 	input_image.set_image(image)
 	var result := task.detect_video(input_image, timestamp_ms)
 	show_result(input_image, result)
-
-func _process_camera(image: MediaPipeImage, timestamp_ms: int) -> void:
-	task.detect_async(image, timestamp_ms)
 
 func show_result(image: MediaPipeImage, result: MediaPipeFaceLandmarkerResult) -> void:
 	var output_image := renderer.render(image, result.face_landmarks)

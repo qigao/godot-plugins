@@ -11,7 +11,9 @@ func _init_task() -> void:
 	base_options.delegate = delegate
 	base_options.model_asset_buffer = file.get_buffer(file.get_length())
 	task = MediaPipeFaceStylizer.new()
-	task.initialize(base_options)
+	if not task.initialize(base_options):
+		_task_initialization_failed()
+		return
 	btn_load_image.disabled = false
 
 func _process_image(image: Image) -> void:

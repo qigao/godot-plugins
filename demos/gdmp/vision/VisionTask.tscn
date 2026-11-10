@@ -6,6 +6,7 @@
 default_font_size = 48
 
 [sub_resource type="ImageTexture" id="ImageTexture_fdc01"]
+resource_local_to_scene = true
 
 [sub_resource type="Theme" id="Theme_pmbf8"]
 default_font_size = 48
@@ -158,14 +159,6 @@ text = "Select Format:"
 
 [node name="SelectFormat" type="OptionButton" parent="SelectCamera/VBoxContainer" unique_id=1435517834]
 layout_mode = 2
-
-[node name="CameraViewport" type="SubViewport" parent="." unique_id=86385309]
-disable_3d = true
-render_target_update_mode = 4
-
-[node name="TextureRect" type="TextureRect" parent="CameraViewport" unique_id=873845598]
-offset_right = 40.0
-offset_bottom = 40.0
 
 [node name="PermissionDialog" type="AcceptDialog" parent="." unique_id=1961100957]
 title = "Permission Denied"
