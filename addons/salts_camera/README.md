@@ -1,6 +1,6 @@
 # Salts Camera
 
-Salts Camera exposes native video capture to Godot 4.5.2 as a `CameraFeed` with optional `CameraTexture` preview and owned raw snapshots. It links the static `Salts::Media` target from the installed SaltsBase v0.1.3 SDK. [Design](../../docs/SALTS-CAMERA-DESIGN.md) · [Acceptance](../../docs/SALTS-CAMERA-ACCEPTANCE.md)
+Salts Camera exposes native camera preview, owned raw frames, and PCM audio playback to Godot 4.5.2. It links the static `Salts::Media` target from the installed SaltsBase v0.1.3 SDK. [Design](../../docs/SALTS-CAMERA-DESIGN.md) · [Acceptance](../../docs/SALTS-CAMERA-ACCEPTANCE.md)
 
 ## Build
 
@@ -43,7 +43,7 @@ python3 tests/android/check_bundle.py build-android "$ndk"
 
 The Android check inspects the staged `.gdextension`, AArch64 shared objects and their runtime dependencies. For your Android export preset, enable ARM64, use a minimum SDK of 26 or higher, and enable **Camera** under **Permissions**.
 
-The Android CI job publishes `salts-camera-debug-arm64`, a signed test APK for checking permission, preview, and stop on a device. The sample uses the Godot 4.5.2 debug template and sets API 26 through Godot's prebuilt manifest export hook. To export it locally with Android build-tools 35.0.0, JDK 17, and `readelf`, run the following command after extracting `templates/android_debug.apk` from the official 4.5.2 export-template archive.
+The Android CI job publishes `salts-camera-debug-arm64`, a signed test APK for camera and mode selection, live preview, and an audio output test. The sample uses the Godot 4.5.2 debug template and sets API 26 through Godot's prebuilt manifest export hook. To export it locally with Android build-tools 35.0.0, JDK 17, and `readelf`, run the following command after extracting `templates/android_debug.apk` from the official 4.5.2 export-template archive.
 
 ```sh
 bash tests/android/export_apk.sh build-android /path/to/godot /path/to/android_debug.apk "$ANDROID_HOME" "$JAVA_HOME"
@@ -51,35 +51,41 @@ bash tests/android/export_apk.sh build-android /path/to/godot /path/to/android_d
 
 The output is `build-android/salts-camera-android-arm64.apk`. The export check verifies 16 KiB ZIP alignment and at least 16 KiB ELF load alignment for every packaged native library.
 
+## Run the sample
+
+On desktop, build with `BUILD_TESTING=ON` and open the staged scene with `godot --path build res://camera.tscn`. On Android, install the signed APK. Select **Scan cameras**, choose a camera and its mode, then select **Start preview**. Scan and select an audio output separately, then select **Play test tone**. Both controls can run in the same scene. [Sample scene](../../tests/android/export_project/camera.tscn)
+
 ## Open and preview a camera
 
 Call the add-on API from the Godot main thread. On macOS, include `NSCameraUsageDescription` in the host application's `Info.plist`. If `permission_status()` returns `PERMISSION_REQUESTABLE`, call `request_permission()` and wait for `PERMISSION_GRANTED` before opening a camera. On Linux and Windows the permission method reports `PERMISSION_UNKNOWN`. The camera open result reflects availability from the native backend.
 
 On Android, connect to `MainLoop.on_request_permissions_result` before calling `request_permission()`. Proceed after the result grants `android.permission.CAMERA`, then recheck `permission_status()`. Stop the feed when the app pauses and recheck authorization before restarting it.
 
-The following node expects a `TextureRect` child named `Preview` and a host with camera access.
+Populate the camera selector with `manager.list_devices()`. Pass the chosen ID to `open_camera()`, populate the mode selector from its result, then pass the chosen mode dictionary to `start_preview()`. The node below expects a `TextureRect` child named `Preview`.
 
 ```gdscript
 extends Node
 
+var manager := SaltsCameraManager.new()
 var device: SaltsCameraDevice
 var feed: SaltsCameraFeed
 
-func _ready() -> void:
-    var manager := SaltsCameraManager.new()
-    var devices := manager.list_devices()
-    if devices.is_empty():
-        print("Camera enumeration status ", manager.get_last_error())
-        return
-    device = manager.open_device(devices[0]["id"])
+func open_camera(id: String) -> Array[Dictionary]:
+    if device != null:
+        $Preview.texture = null
+        device.close()
+        feed = null
+    device = manager.open_device(id)
     if device == null:
         push_error(error_string(manager.get_last_error()))
-        return
-    var modes := device.list_modes()
-    if modes.is_empty():
-        print("Camera mode enumeration status ", device.get_last_error())
-        return
-    feed = device.create_feed(modes[0])
+        return []
+    return device.list_modes(false)
+
+func start_preview(mode: Dictionary) -> void:
+    if feed != null:
+        $Preview.texture = null
+        feed.close()
+    feed = device.create_feed(mode)
     if feed == null:
         push_error(error_string(device.get_last_error()))
         return
@@ -106,3 +112,11 @@ func _exit_tree() -> void:
 For raw-only capture, activate the feed with `set_active(true)` before requesting snapshots. `get_latest_raw_frame()` returns a snapshot of the latest frame consumed during `SceneTree.process_frame` or `null` until one arrives. The snapshot owns its bytes, dimensions, format, and native microsecond timestamp. It remains valid after a restart or close. `get_statistics()` reports callback arrivals and drops, conversions, preview submissions, conversion errors, and time from callback arrival to preview submission. The latency counter uses a monotonic clock local to the adapter.
 
 The V1 adapter accepts packed BGRA and RGB24, plus even-dimension I420/NV12 and MJPEG on Linux, Windows and Android. The macOS SDK's camera backend emits BGRA and the Android camera backend emits I420. Packed buffers with unexpected lengths are dropped. RGBA8 frames are limited to 64 MiB, with up to three preallocated capture slots and one preview conversion buffer.
+
+## Select an output and play PCM
+
+Create a `SaltsPlayback` on the Godot main thread. `list_devices()` returns `id`, `name`, and `is_default` for each output exposed by SaltsBase. Pass the selected ID to `open_device(id, sample_rate, channels, format, buffer_ms)` on the same object. Refreshing the list invalidates previous IDs. The v0.1.3 Android backend exposes the system-routed output. The desktop selector lists the devices reported by the native backend.
+
+`open_device()` defaults to 48 kHz stereo F32 and a 100 ms PCM buffer. It accepts 8, 16, 24, and 48 kHz, one or two channels, and interleaved S16, S32, or F32 PCM. The buffer can hold 10 to 2000 ms of audio.
+
+Queue frame-aligned bytes with `write_pcm(bytes, byte_offset)` before or after `start()`. Advance the byte offset by the returned count and retry the unwritten suffix on a later frame. A zero-byte result with `get_last_error() == OK` means a full buffer or completed input. `get_buffered_bytes()` and `get_available_bytes()` report queue occupancy and free space. Use `pause()` and `resume()` to keep queued samples, `stop()` to discard them, or `close()` to release the device before switching outputs. Poll `get_state()` for device errors. [Streaming test-tone example](../../tests/android/export_project/playback.gd)

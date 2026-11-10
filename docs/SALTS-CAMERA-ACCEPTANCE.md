@@ -1,6 +1,6 @@
 # Salts Camera — acceptance and CI gates
 
-Desktop CI builds the M0 extension and runs native TinyTest, a production-library Godot load test, and a separate headless `CameraTexture` fixture. The Android job builds the ARM64 add-on, exports the camera sample, and verifies its signed debug APK. Physical-device checks and release signing require separate evidence. [Frame V2 and GPU roadmap](https://github.com/qigao/salts-core/issues/197)
+Desktop CI builds the extension and runs native TinyTest, a production-library Godot load test that starts the media sample, and a separate headless `CameraTexture` fixture. The Android job builds the ARM64 add-on, exports the same sample, and verifies its signed debug APK. Physical-device checks and release signing require separate evidence. [Frame V2 and GPU roadmap](https://github.com/qigao/salts-core/issues/197)
 
 ## Source of truth
 
@@ -40,6 +40,7 @@ No Mono, MSVC, installer/consumer test projects or probe-only CI; external archi
 
 - [ ] Windows/Linux/macOS physical camera: 720p/1080p, expected fps, reconnect, suspend/resume, manually denied permission.
 - [ ] Android physical device: user permission grant/deny, back/front switch, home/background/resume, orientation, USB camera when supported, app shutdown without dangling callbacks.
+- [ ] Playback on physical outputs: select an enumerated route, hear the test tone, pause and resume, then stop and reopen another output where available. Verify Android follows the current system output.
 - [ ] iOS physical device: authorization prompt, rejection, foreground/background, back/front switch and actual export signing/launch.
 - [ ] Measure capture timestamp to preview/display latency; show resolution, fps, color format, copies/frame, allocations/frame and drops. Baseline against original Godot CameraServer route under the same device/mode, no unsupported performance numbers.
 

@@ -35,6 +35,7 @@ Godot scene / CameraTexture / script / raw frame consumer
 | `SaltsCameraDevice : RefCounted` | Own one `video_device_t` and native mode identity | `list_modes(standard_only=true)`, `create_feed(mode)`, `close()` |
 | `SaltsCameraFeed : CameraFeed` | Own one `capture_t` and optionally register with Godot CameraServer | `register_preview()`, `unregister_preview()`, `set_active()`, `get_latest_raw_frame()`, `get_statistics()`, `close()` |
 | `SaltsCameraFrame : RefCounted` | Owned **snapshot** for script use (never a borrowed callback pointer) | `get_bytes()`, `get_format()`, `get_width()`, `get_height()`, `get_timestamp_us()` |
+| `SaltsPlayback : RefCounted` | Enumerate audio outputs and own one bounded PCM sink | `list_devices()`, `open_device()`, `write_pcm()`, `start()`, `pause()`, `resume()`, `stop()`, `get_state()`, `close()` |
 
 **Device/mode identity:** `mode_id` in the Salts API is valid only for the originating open device handle / connection. `list_modes()` returns dictionaries owned by that `SaltsCameraDevice`; `create_feed(mode)` checks the full mode fields and current handle. A serialized mode or device reopen must not silently reuse a stale identity. Opening a second feed from the same device requires explicit backend permission and independent ownership; do not assume concurrent opens work.
 
@@ -45,6 +46,8 @@ The application opts into preview with `CameraServer.monitoring_feeds = true` an
 The build pins Godot 4.5.2 and the `godot-cpp` 4.5 bindings at `e83fd0904c13356ed1d4c3d09f8bb9132bdc6b77`. Other engine versions require their own ABI and load tests.
 
 Manager, device, and feed operations expose Godot error codes. Read `get_last_error()` after an empty enumeration, a failed open or create, or an activation that leaves `is_active()` false. A successful empty device list is valid on hosts without cameras. [GDScript usage](../addons/salts_camera/README.md#open-and-preview-a-camera)
+
+The playback adapter owns the native device descriptions from its latest enumeration. Script sees an opaque selection ID scoped to that enumeration and owner. Open passes the original description to SaltsBase. The Godot main thread serializes both control and the sole PCM producer. SaltsBase's native callback consumes the bounded buffer. The application retains the input bytes and advances by the actual accepted byte count. [Playback usage](../addons/salts_camera/README.md#select-an-output-and-play-pcm)
 
 ## Capture-to-Godot pipeline
 

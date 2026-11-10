@@ -2,6 +2,7 @@
 #include "salts_camera_feed.hpp"
 #include "salts_camera_frame.hpp"
 #include "salts_camera_manager.hpp"
+#include "salts_playback.hpp"
 
 #ifdef SALTS_CAMERA_TEST_FIXTURE
 #include "preview_fixture.hpp"
@@ -18,6 +19,7 @@ void initialize(godot::ModuleInitializationLevel level) {
         GDREGISTER_CLASS(salts_camera::SaltsCameraFeed);
         GDREGISTER_CLASS(salts_camera::SaltsCameraDevice);
         GDREGISTER_CLASS(salts_camera::SaltsCameraManager);
+        GDREGISTER_CLASS(salts_camera::SaltsPlayback);
 #ifdef SALTS_CAMERA_TEST_FIXTURE
         GDREGISTER_CLASS(salts_camera::SaltsCameraPreviewFixture);
 #endif

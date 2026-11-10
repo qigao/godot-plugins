@@ -30,7 +30,7 @@ def main():
 
     descriptor = "addons/salts_camera/salts_camera.gdextension"
     with ZipFile(args.apk) as apk, TemporaryDirectory() as scratch:
-        startup_assets = {"assets/project.binary", "assets/camera.tscn.remap", "assets/camera.gdc"}
+        startup_assets = {"assets/project.binary", "assets/camera.tscn.remap", "assets/camera.gdc", "assets/playback.gdc"}
         if not startup_assets.issubset(apk.namelist()):
             raise SystemExit("APK does not contain the camera sample's startup assets")
         if apk.read("assets/" + descriptor) != (args.build / descriptor).read_bytes():

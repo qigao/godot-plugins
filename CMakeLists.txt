@@ -31,7 +31,8 @@ set(camera_sources
   src/salts_camera/salts_camera_device.cpp
   src/salts_camera/salts_camera_feed.cpp
   src/salts_camera/salts_camera_frame.cpp
-  src/salts_camera/salts_camera_manager.cpp)
+  src/salts_camera/salts_camera_manager.cpp
+  src/salts_camera/salts_playback.cpp)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64)$")
   set(camera_platform linux)
@@ -128,6 +129,9 @@ if(BUILD_TESTING)
   add_test(NAME salts_camera.native COMMAND salts_camera_native_tests)
   configure_file(tests/godot/project.godot project.godot COPYONLY)
   configure_file(tests/godot/camera_smoke.gd camera_smoke.gd COPYONLY)
+  foreach(resource IN ITEMS camera.tscn camera.gd playback.gd)
+    configure_file("tests/android/export_project/${resource}" "${resource}" COPYONLY)
+  endforeach()
   file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/.godot/extension_list.cfg" "res://addons/salts_camera/salts_camera.gdextension\n")
   add_test(NAME salts_camera.godot
     COMMAND "${GODOT_EXECUTABLE}" --headless --path "${CMAKE_CURRENT_BINARY_DIR}" --script res://camera_smoke.gd)
