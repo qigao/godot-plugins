@@ -27,9 +27,9 @@ ARCHIVES = {
         "godot-cpp.tar.gz",
     ),
     "ocv": (
-        f"{CODELOAD}/qigao/ocv/tar.gz/35d834d6bf049424becfbe536d367f9279fa78bb",
-        "570f5f791b093f68bd3e7305767b6d36e19ea161ff2c8041b034fecdfd7f722f",
-        "ocv-gdmp-35d834d6bf04.tar.gz",
+        f"{CODELOAD}/qigao/ocv/tar.gz/dcd5d534fd3cf16556fce562e42c9c5b8efb5dfe",
+        "2e37345245c72f6a6e3dced9f2c442833a140b7079c97dc565ba0d9de49063c4",
+        "ocv-gdmp-dcd5d534fd3c.tar.gz",
     ),
 }
 ZLIB = (
