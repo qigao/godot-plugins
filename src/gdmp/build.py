@@ -215,6 +215,9 @@ def main():
     ]
     if host != "Windows":
         flags += ["--copt=-fPIC", "--cxxopt=-std=c++17", "--host_cxxopt=-std=c++17"]
+    build_env = os.environ.copy()
+    if args.target == "android":
+        build_env["ANDROID_NDK_HOME"] = str(Path(build_env["ANDROID_NDK_HOME"]).resolve())
     subprocess.run(
         [
             Path(bazel).resolve(), f"--output_user_root={out / 'bazel'}", "build", "-c", "opt",
@@ -223,6 +226,7 @@ def main():
             *flags, *target_options(args.target, arch, host), f"@GDMP//GDMP/{args.target}:GDMP",
         ],
         cwd=mediapipe,
+        env=build_env,
         check=True,
     )
     stage_addon(out, mediapipe, args.target, arch, host)
