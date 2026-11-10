@@ -32,7 +32,7 @@ if(NOT MediaPipe_GPU_ENABLED OR NOT MediaPipe_SDK_PLATFORM STREQUAL "${gdmp_plat
 endif()
 if(ANDROID)
   set(gdmp_android_api "${CMAKE_SYSTEM_VERSION}")
-  if(ANDROID_USE_LEGACY_TOOLCHAIN_FILE)
+  if(DEFINED ANDROID_PLATFORM_LEVEL)
     set(gdmp_android_api "${ANDROID_PLATFORM_LEVEL}")
   endif()
   if(gdmp_android_api VERSION_LESS MediaPipe_ANDROID_API)
