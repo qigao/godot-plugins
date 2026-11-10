@@ -2,7 +2,6 @@
 
 #include "godot_cpp/core/class_db.hpp"
 #include "godot_cpp/core/error_macros.hpp"
-#include "mediapipe/framework/port.h"
 
 #if MEDIAPIPE_DISABLE_GPU
 #error "GDMP requires a GPU-enabled MediaPipe build"
