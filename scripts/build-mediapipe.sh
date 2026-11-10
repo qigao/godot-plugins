@@ -14,6 +14,8 @@ case "$platform" in
         export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/27.3.13750724"
         target_flags=(
             --config=android_arm64
+            --incompatible_enable_cc_toolchain_resolution
+            --platforms=@salts_mediapipe//:android_arm64
             --extra_toolchains=@androidndk//:all
             --linkopt=-Wl,-z,max-page-size=16384
             --linkopt=-Wl,-z,common-page-size=16384

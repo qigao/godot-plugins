@@ -1,3 +1,8 @@
+platform(
+    name = "android_arm64",
+    constraint_values = ["@platforms//os:android", "@platforms//cpu:aarch64"],
+)
+
 cc_binary(
     name = "libsalts_mediapipe.so",
     srcs = [
@@ -9,6 +14,7 @@ cc_binary(
         "-fvisibility=hidden",
     ],
     linkshared = True,
+    linkstatic = True,
     deps = [
         "@com_google_absl//absl/status",
         "@godot-cpp//:godot",
