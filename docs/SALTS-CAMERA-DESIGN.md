@@ -70,14 +70,14 @@ Script raw access (opt-in):
 
 ## Permission and mobile packaging boundary
 
-- Android: native device access uses existing **NDK Camera2** provider; add minimal Android permission/request/lifecycle bridge and manifest packaging only, **not** Java `CameraDevice`/`ImageReader` camera logic. Current Salts Android minimum is API 26. Request `android.permission.CAMERA` from the host and support explicit denial/cancel/resume.
+- Android uses the SaltsBase **NDK Camera2** provider and Godot's permission API. The add-on builds for `arm64-v8a` at API 26. The host export declares `android.permission.CAMERA` and handles permission results, pause and resume.
 - iOS: platform bridge only for `AVCaptureDevice` authorization and host `NSCameraUsageDescription`; **not** a second Swift capture pipeline. Validate actual Godot export and iOS binary/linking rules before claiming support.
 - Desktop: surface accurate system permission/availability result; missing physical camera is not a successful camera test.
 - Follow the app lifecycle and keep one owner per device. The extension links `Salts::Media` statically. Package the transitive `Salts::Core` shared runtime, any required redistributable shared libraries and their license notices.
 
 ## Plugin source and packaging
 
-`src/salts_camera/` contains the extension and the native frame adapter. CMake stages the platform-specific `.gdextension`, shared extension and runtime libraries under `build/addons/salts_camera/`. Native TinyTest and headless tests live under `tests/`. The synthetic preview input is built into a separate test extension. Android and iOS export packaging is part of M1.
+`src/salts_camera/` contains the extension and the native frame adapter. CMake stages the platform-specific `.gdextension`, shared extension and runtime libraries under `build/addons/salts_camera/`. Native TinyTest and headless tests live under `tests/`. The synthetic preview input is built into a separate test extension. Android CI checks the staged ARM64 add-on, and signed mobile export is part of M1.
 
 ## Build/dependency constraints
 

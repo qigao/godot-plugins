@@ -11,6 +11,7 @@ Use CMake 3.27+, Ninja, Python 3, Godot 4.5.2, and `godot-cpp` at `e83fd0904c133
 | Linux x64 | `linux-clang-x64` | `vcpkg_installed/x64-linux` | Clang, PipeWire and X11 development libraries |
 | Windows x64 | `windows-llvm-mingw-x64` | `vcpkg_installed/qigao-x64-windows-llvm-mingw` | LLVM-MinGW `20261020` UCRT |
 | macOS ARM64 | `macos-clang-arm64` | `vcpkg_installed/arm64-osx` | Clang, Xcode 16.4 at `/Applications/Xcode_16.4.app` |
+| Android ARM64 | `android-arm64` | `vcpkg_installed/arm64-android` | NDK r27d `27.3.13750724`, `arm64-v8a`, API 26 |
 
 From the repository root on Linux, configure the released SDK and dependency prefixes together.
 
@@ -26,9 +27,27 @@ ctest --test-dir build --output-on-failure
 
 Use the matching compiler paths and dependency prefix on Windows and macOS. On macOS, set `DEVELOPER_DIR` to `/Applications/Xcode_16.4.app/Contents/Developer`. For a build without the test projects, omit `BUILD_TESTING` and `GODOT_EXECUTABLE`. The extension and its runtime libraries are staged under `build/addons/salts_camera/`. Copy that directory to `addons/salts_camera/` in your Godot project and open it with Godot 4.5.2. The generated descriptor lists the platform built by that configure.
 
+On Linux, cross-build the Android add-on with the NDK at the path recorded in the published SaltsBase SDK.
+
+```sh
+ndk=/usr/local/lib/android/sdk/ndk/27.3.13750724
+prefix='/path/to/salts-base-android;/path/to/vcpkg_installed/arm64-android'
+cmake -S . -B build-android -G Ninja -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_TOOLCHAIN_FILE="$ndk/build/cmake/android.toolchain.cmake" \
+  -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-26 -DANDROID_STL=c++_static \
+  -DGODOT_CPP_DIR=/path/to/godot-cpp \
+  "-DCMAKE_PREFIX_PATH=$prefix" "-DCMAKE_FIND_ROOT_PATH=$prefix"
+cmake --build build-android
+python3 tests/android/check_bundle.py build-android "$ndk"
+```
+
+The Android check inspects the staged `.gdextension`, AArch64 shared objects and their runtime dependencies. For the Android export preset, enable ARM64, set the minimum SDK to 26 or higher, and enable **Camera** under **Permissions**.
+
 ## Open and preview a camera
 
 Call the add-on API from the Godot main thread. On macOS, include `NSCameraUsageDescription` in the host application's `Info.plist`. If `permission_status()` returns `PERMISSION_REQUESTABLE`, call `request_permission()` and wait for `PERMISSION_GRANTED` before opening a camera. On Linux and Windows the permission method reports `PERMISSION_UNKNOWN`. The camera open result reflects availability from the native backend.
+
+On Android, connect to `MainLoop.on_request_permissions_result` before calling `request_permission()`. Proceed after the result grants `android.permission.CAMERA`, then recheck `permission_status()`. Stop the feed when the app pauses and recheck authorization before restarting it.
 
 The following node expects a `TextureRect` child named `Preview` and a host with camera access.
 
@@ -78,4 +97,4 @@ func _exit_tree() -> void:
 
 For raw-only capture, activate the feed with `set_active(true)` before requesting snapshots. `get_latest_raw_frame()` returns a snapshot of the latest frame consumed during `SceneTree.process_frame` or `null` until one arrives. The snapshot owns its bytes, dimensions, format, and native microsecond timestamp. It remains valid after a restart or close. `get_statistics()` reports callback arrivals and drops, conversions, preview submissions, conversion errors, and time from callback arrival to preview submission. The latency counter uses a monotonic clock local to the adapter.
 
-The V1 SDK exposes compact frame layouts. M0 accepts packed BGRA and RGB24, plus even-dimension I420/NV12 and MJPEG on Linux and Windows. The macOS SDK's camera backend emits BGRA. Packed buffers with unexpected lengths are dropped. RGBA8 frames are limited to 64 MiB, with up to three preallocated capture slots and one preview conversion buffer.
+The V1 adapter accepts packed BGRA and RGB24, plus even-dimension I420/NV12 and MJPEG on Linux, Windows and Android. The macOS SDK's camera backend emits BGRA and the Android camera backend emits I420. Packed buffers with unexpected lengths are dropped. RGBA8 frames are limited to 64 MiB, with up to three preallocated capture slots and one preview conversion buffer.

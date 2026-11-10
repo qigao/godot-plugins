@@ -5,6 +5,10 @@
 #include <array>
 #include <godot_cpp/core/class_db.hpp>
 
+#ifdef __ANDROID__
+#include <godot_cpp/classes/os.hpp>
+#endif
+
 namespace salts_camera {
 
 using namespace godot;
@@ -25,7 +29,11 @@ void SaltsCameraManager::_bind_methods() {
 TypedArray<Dictionary> SaltsCameraManager::list_devices() {
     TypedArray<Dictionary> result;
     const auto permission = permission_status();
+#ifdef __ANDROID__
+    if (permission != PERMISSION_GRANTED) {
+#else
     if (permission == PERMISSION_DENIED || permission == PERMISSION_RESTRICTED) {
+#endif
         last_error_ = ERR_UNAUTHORIZED;
         return result;
     }
@@ -72,7 +80,24 @@ Ref<SaltsCameraDevice> SaltsCameraManager::open_device(const String &id) {
     return {};
 }
 
-#ifndef __APPLE__
+#if defined(__ANDROID__)
+namespace {
+constexpr char camera_permission[] = "android.permission.CAMERA";
+}
+
+SaltsCameraManager::PermissionStatus SaltsCameraManager::permission_status() const {
+    return OS::get_singleton()->get_granted_permissions().has(camera_permission)
+        ? PERMISSION_GRANTED : PERMISSION_REQUESTABLE;
+}
+
+Error SaltsCameraManager::request_permission() const {
+    const bool immediate = OS::get_singleton()->request_permission(camera_permission);
+    if (immediate && permission_status() != PERMISSION_GRANTED) {
+        return ERR_UNCONFIGURED;
+    }
+    return OK;
+}
+#elif !defined(__APPLE__)
 SaltsCameraManager::PermissionStatus SaltsCameraManager::permission_status() const {
     return PERMISSION_UNKNOWN;
 }

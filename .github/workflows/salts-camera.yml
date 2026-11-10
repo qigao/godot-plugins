@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  desktop:
+  build:
     name: ${{ matrix.sdk }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 25
@@ -41,6 +41,11 @@ jobs:
             godot_asset: Godot_v4.5.2-stable_macos.universal.zip
             godot_sha: 2a3f35cf5813b0d26e3f4c15dabc5e7c58407fceec7bae5291740772f72d141a
             godot_bin: Godot.app/Contents/MacOS/Godot
+          - runner: ubuntu-24.04
+            sdk: android-arm64
+            sdk_sha: 37ad75902682f2934837aebd318b0c97b8ff7078ce850a406f6495507eff2a62
+            triplet: arm64-android
+            deps_sha: aef8ddbf41d6a9a34e56a94992008fefcfe502be28b2e8b2da682a8f2a399cf5
     env:
       CCACHE_DIR: ${{ github.workspace }}/build-cache/ccache
       CCACHE_BASEDIR: ${{ github.workspace }}
@@ -59,7 +64,7 @@ jobs:
           key: salts-camera-0.1.2-${{ matrix.sdk }}-${{ hashFiles('CMakeLists.txt', 'cmake/**', 'src/**', 'tests/**') }}
           restore-keys: salts-camera-0.1.2-${{ matrix.sdk }}-
       - name: Install Linux system libraries
-        if: runner.os == 'Linux'
+        if: matrix.sdk == 'linux-clang-x64'
         shell: bash
         run: |
           sudo apt-get update
@@ -98,11 +103,23 @@ jobs:
           Expand-VerifiedArchive "https://github.com/qigao/salts-base/releases/download/v0.1.2/salts-base-0.1.2-$env:SDK_PROFILE.tar" $env:SDK_SHA $sdk
           Expand-VerifiedArchive "https://github.com/qigao/vcpkg-cache/releases/download/v0.1.2/installed-$env:DEPS_TRIPLET.tar.xz" $env:DEPS_SHA $dependencies
           Expand-VerifiedArchive "https://codeload.github.com/godotengine/godot-cpp/tar.gz/$revision" 'd4c03daf46c8bef4544614182b0762c3e32789151c7f8f44e8eb2053d5cddeba' $bindings
-          Expand-VerifiedArchive "https://github.com/godotengine/godot-builds/releases/download/4.5.2-stable/$env:GODOT_ASSET" $env:GODOT_SHA $engine
-
-          $godot = Join-Path $engine $env:GODOT_BIN
           $prefix = Join-Path $dependencies "vcpkg_installed/$env:DEPS_TRIPLET"
           $godotCpp = Join-Path $bindings "godot-cpp-$revision"
+
+          if ($env:SDK_PROFILE -eq 'android-arm64') {
+            $ndk = Join-Path $env:ANDROID_HOME 'ndk/27.3.13750724'
+            cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF `
+              "-DCMAKE_TOOLCHAIN_FILE=$ndk/build/cmake/android.toolchain.cmake" `
+              -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-26 -DANDROID_STL=c++_static `
+              -DCMAKE_CXX_COMPILER_LAUNCHER=ccache "-DCMAKE_PREFIX_PATH=$sdk;$prefix" `
+              "-DCMAKE_FIND_ROOT_PATH=$sdk;$prefix" "-DGODOT_CPP_DIR=$godotCpp"
+            cmake --build build --parallel 4
+            python tests/android/check_bundle.py build $ndk
+            exit 0
+          }
+
+          Expand-VerifiedArchive "https://github.com/godotengine/godot-builds/releases/download/4.5.2-stable/$env:GODOT_ASSET" $env:GODOT_SHA $engine
+          $godot = Join-Path $engine $env:GODOT_BIN
           $cc = 'clang'
           $cxx = 'clang++'
           if ($IsWindows) {
