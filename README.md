@@ -14,3 +14,7 @@ The Godot 4.5.2 GDExtension uses `Salts::Media` from the installed SaltsBase v0.
 - `SaltsPlayback` enumerates audio outputs and streams PCM to the selected device.
 
 CI builds and tests the desktop extension and exports a signed Android ARM64 debug APK with camera preview and an audio output test. Physical-device checks, release packaging, and the Frame V2 and GPU frame work have separate gates. [Frame V2 and GPU roadmap](https://github.com/qigao/salts-core/issues/197)
+
+## Salts MediaPipe
+
+A separate native add-on for CPU face, hand, and pose landmarking, adapted from GDMP. It accepts Godot images and can use owned SaltsCamera snapshots as input. [Build and API](addons/salts_mediapipe/README.md)

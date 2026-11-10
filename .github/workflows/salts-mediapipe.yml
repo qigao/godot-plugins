@@ -1,0 +1,66 @@
+name: Salts MediaPipe CI
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/salts-mediapipe.yml'
+      - 'addons/salts_mediapipe/**'
+      - 'scripts/build-mediapipe.sh'
+      - 'src/salts_mediapipe/**'
+      - 'tests/mediapipe/**'
+      - 'tests/android/check_bundle.py'
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/salts-mediapipe.yml'
+      - 'addons/salts_mediapipe/**'
+      - 'scripts/build-mediapipe.sh'
+      - 'src/salts_mediapipe/**'
+      - 'tests/mediapipe/**'
+      - 'tests/android/check_bundle.py'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.platform }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [linux-x64, android-arm64]
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/cache@v6.1.0
+        with:
+          path: |
+            build-mediapipe/downloads
+            build-mediapipe/repository-cache
+            build-mediapipe/disk-cache
+          key: salts-mediapipe-${{ matrix.platform }}-${{ hashFiles('scripts/build-mediapipe.sh', 'src/salts_mediapipe/**') }}
+          restore-keys: salts-mediapipe-${{ matrix.platform }}-
+      - name: Build the MediaPipe GDExtension
+        env:
+          CC: clang
+          CXX: clang++
+        run: bash scripts/build-mediapipe.sh build-mediapipe '${{ matrix.platform }}'
+      - name: Run face, hand, and pose inference in Godot
+        if: matrix.platform == 'linux-x64'
+        run: |
+          set -euo pipefail
+          asset=Godot_v4.5.2-stable_linux.x86_64.zip
+          curl -fsSL --retry 3 "https://github.com/godotengine/godot-builds/releases/download/4.5.2-stable/$asset" -o "$RUNNER_TEMP/$asset"
+          printf '%s  %s\n' 87f6e6be292929e363d15ed9052f277b2ba4e95ed994e1e099048097be2dfd03 "$RUNNER_TEMP/$asset" | sha256sum -c -
+          unzip -q "$RUNNER_TEMP/$asset" -d "$RUNNER_TEMP/godot"
+          bash tests/mediapipe/run.sh build-mediapipe "$RUNNER_TEMP/godot/${asset%.zip}"
+      - name: Check the Android ARM64 library
+        if: matrix.platform == 'android-arm64'
+        run: |
+          python3 -B tests/mediapipe/check_android.py \
+            build-mediapipe/addons/salts_mediapipe/bin/android/arm64/libsalts_mediapipe.so \
+            "$ANDROID_HOME/ndk/27.3.13750724"
