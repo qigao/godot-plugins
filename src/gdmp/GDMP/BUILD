@@ -1,0 +1,33 @@
+load("//GDMP:GDMP.bzl", "CALCULATORS", "TASKS")
+
+exports_files(["exports.lds"])
+
+cc_library(
+    name = "GDMP",
+    srcs = ["gdlibrary.cc"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//GDMP/framework:graph",
+        "//GDMP/framework:graph_builder",
+        "//GDMP/framework:graph_config",
+        "//GDMP/framework:image",
+        "//GDMP/framework:packet",
+        "//GDMP/gpu:gpu_helper",
+        "//GDMP/gpu:gpu_resources",
+        "//GDMP/io:camera_helper",
+        "//GDMP/proto:proto",
+        "//GDMP/tasks:task",
+        "//GDMP/tasks:task_runner",
+        "//GDMP/tasks/containers:category",
+        "//GDMP/tasks/containers:classification_result",
+        "//GDMP/tasks/containers:detection_result",
+        "//GDMP/tasks/containers:embedding_result",
+        "//GDMP/tasks/containers:keypoint",
+        "//GDMP/tasks/containers:landmark",
+        "//GDMP/tasks/processors:classifier_options",
+        "//GDMP/tasks/processors:embedder_options",
+        "//GDMP/util:resource_provider",
+        "@godot-cpp//:godot",
+    ] + CALCULATORS + TASKS,
+    alwayslink = 1,
+)

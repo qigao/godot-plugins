@@ -1,6 +1,7 @@
 #pragma once
 
 #include <capture.h>
+#include <godot_cpp/classes/image.hpp>
 #include <godot_cpp/classes/ref_counted.hpp>
 #include <godot_cpp/variant/packed_byte_array.hpp>
 
@@ -23,6 +24,7 @@ public:
     int get_width() const { return width_; }
     int get_height() const { return height_; }
     int64_t get_timestamp_us() const { return timestamp_us_; }
+    godot::Ref<godot::Image> to_image() const;
 
 protected:
     static void _bind_methods();
