@@ -16,7 +16,7 @@ cmake --build build-gdmp-sdk
 
 On macOS, add `-DCMAKE_OSX_DEPLOYMENT_TARGET=15.0` and set `CMAKE_OSX_ARCHITECTURES` to `arm64` or `x86_64` for the selected archive. On Android, add `-DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake" -DANDROID_PLATFORM=android-26` and set `ANDROID_ABI` to `arm64-v8a` or `x86_64`. Use NDK 27.3.13750724.
 
-On Windows, use the LLVM-MinGW toolchain and the CPU SDK for the selected architecture. `GDMP.windows.dll` uses the statically linked XNNPACK delegate. Face Stylizer is unavailable in the 1.2.2 SDK because MediaPipe removed that task API.
+On Windows, use the LLVM-MinGW toolchain and the CPU SDK for the selected architecture. `GDMP.windows.dll` uses the statically linked XNNPACK delegate. MediaPipe 1.2.2 supports audio embedding in clip mode and removed the Face Stylizer task API.
 
 The build stages the add-on under `build-gdmp-sdk/addons/GDMP`. Run the [GDMP with MediaPipe SDK workflow](../../.github/workflows/gdmp-sdk.yml) with a published SDK tag and the SHA-256 of its `SHA256SUMS` file. It builds GDMP for all eight targets and exercises the inference demo on Linux x64 and ARM64.
 

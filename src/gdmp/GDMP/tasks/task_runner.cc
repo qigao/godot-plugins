@@ -6,6 +6,9 @@
 
 #include "GDMP/util/packet_map.h"
 
+using mediapipe::tasks::core::MediaPipeBuiltinOpResolver;
+using mediapipe::tasks::core::PacketsCallback;
+
 void MediaPipeTaskRunner::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("initialize", "config", "callback"), &MediaPipeTaskRunner::initialize, DEFVAL(nullptr));
 	ClassDB::bind_method(D_METHOD("process", "inputs"), &MediaPipeTaskRunner::process);
@@ -27,7 +30,17 @@ bool MediaPipeTaskRunner::initialize(Ref<MediaPipeGraphConfig> config, Callable 
 			callback.call_deferred(outputs);
 		};
 	auto op_resolver = std::make_unique<MediaPipeBuiltinOpResolver>();
+#if GDMP_MEDIAPIPE_SDK_1_2_2
+	auto create_task = TaskRunner::Create({
+		.config = config->get_config(),
+		.task_name = "GDMP",
+		.task_running_mode = mediapipe::tasks::core::RunningMode::kUnspecified,
+		.op_resolver = std::move(op_resolver),
+		.packets_callback = std::move(packets_callback),
+	});
+#else
 	auto create_task = TaskRunner::Create(config->get_config(), std::move(op_resolver), packets_callback);
+#endif
 	if (create_task.ok())
 		task_runner = std::move(create_task.value());
 	else

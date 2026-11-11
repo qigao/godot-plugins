@@ -17,10 +17,14 @@ void MediaPipeAudioEmbedder::_register_task() {
 bool MediaPipeAudioEmbedder::initialize(Ref<MediaPipeTaskBaseOptions> base_options, RunningMode running_mode, Ref<MediaPipeEmbedderOptions> embedder_options) {
 	ERR_FAIL_COND_V(base_options.is_null(), false);
 	ERR_FAIL_COND_V(embedder_options.is_null(), false);
+#if GDMP_MEDIAPIPE_SDK_1_2_2
+	ERR_FAIL_COND_V_MSG(running_mode != RUNNING_MODE_AUDIO_CLIPS, false, "MediaPipe 1.2.2 supports audio embedding in clip mode.");
+#endif
 	auto options = std::make_unique<AudioEmbedderOptions>();
 	options->base_options = std::move(*base_options->get_base_options());
-	options->running_mode = get_running_mode(running_mode);
 	options->embedder_options = embedder_options->get_options();
+#if !GDMP_MEDIAPIPE_SDK_1_2_2
+	options->running_mode = get_running_mode(running_mode);
 	if (running_mode == RUNNING_MODE_AUDIO_STREAM)
 		options->result_callback = [this](absl::StatusOr<AudioEmbedderResult> result) {
 			Ref<MediaPipeEmbeddingResult> callback_result;
@@ -28,6 +32,7 @@ bool MediaPipeAudioEmbedder::initialize(Ref<MediaPipeTaskBaseOptions> base_optio
 				callback_result = Ref(memnew(MediaPipeEmbeddingResult(result.value())));
 			emit_signal("result_callback", callback_result);
 		};
+#endif
 	auto create_task = AudioEmbedder::Create(std::move(options));
 	if (create_task.ok())
 		task = std::move(create_task.value());
@@ -54,12 +59,16 @@ TypedArray<MediaPipeEmbeddingResult> MediaPipeAudioEmbedder::embed(PackedVector2
 }
 
 bool MediaPipeAudioEmbedder::embed_async(PackedVector2Array audio_data, bool is_stereo, double audio_sample_rate, uint64_t timestamp_ms) {
+#if GDMP_MEDIAPIPE_SDK_1_2_2
+	ERR_FAIL_V_MSG(false, "MediaPipe 1.2.2 supports audio embedding in clip mode.");
+#else
 	ERR_FAIL_COND_V(task == nullptr, false);
 	mediapipe::Matrix audio_block = make_audio_matrix(audio_data, is_stereo);
 	auto result = task->EmbedAsync(audio_block, audio_sample_rate, timestamp_ms);
 	if (!result.ok())
 		ERR_PRINT(result.message().data());
 	return result.ok();
+#endif
 }
 
 GDMP_REGISTER_TASK(MediaPipeAudioEmbedder, MediaPipeAudioTask);

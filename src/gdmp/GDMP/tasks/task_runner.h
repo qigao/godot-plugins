@@ -11,7 +11,7 @@
 #include "GDMP/framework/graph_config.h"
 
 using namespace godot;
-using namespace mediapipe::tasks::core;
+using mediapipe::tasks::core::TaskRunner;
 
 class MediaPipeTaskRunner : public RefCounted {
 		GDCLASS(MediaPipeTaskRunner, RefCounted)
