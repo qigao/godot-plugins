@@ -2,9 +2,6 @@
 
 [ext_resource type="Script" uid="uid://dk5pwq2h33n07" path="res://vision/VisionTask.gd" id="1_xmyhf"]
 
-[sub_resource type="Theme" id="Theme_8m5im"]
-default_font_size = 48
-
 [sub_resource type="ImageTexture" id="ImageTexture_fdc01"]
 resource_local_to_scene = true
 
@@ -46,25 +43,6 @@ anchor_bottom = 0.5
 grow_vertical = 2
 theme_override_font_sizes/font_size = 48
 text = "Back"
-
-[node name="OptionDelegate" type="OptionButton" parent="VBoxContainer/Title" unique_id=630797505]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.8
-anchor_top = 0.5
-anchor_right = 1.0
-anchor_bottom = 0.5
-grow_horizontal = 0
-grow_vertical = 2
-theme = SubResource("Theme_8m5im")
-disabled = true
-alignment = 1
-selected = 0
-item_count = 2
-popup/item_0/text = "CPU"
-popup/item_0/id = 0
-popup/item_1/text = "GPU"
-popup/item_1/id = 1
 
 [node name="ExternalFileDisabled" type="Label" parent="VBoxContainer" unique_id=704188518]
 visible = false

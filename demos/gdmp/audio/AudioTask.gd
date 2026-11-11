@@ -3,7 +3,6 @@ extends Control
 
 var request: HTTPRequest
 var running_mode := MediaPipeAudioTask.RUNNING_MODE_AUDIO_CLIPS
-var delegate := MediaPipeTaskBaseOptions.DELEGATE_CPU
 var audio_capture: AudioEffectCapture
 var record_start: int = 0
 
@@ -60,6 +59,12 @@ func _get_external_file() -> void:
 	request = null
 	_init_task()
 
+func _task_initialization_failed() -> void:
+	btn_load_audio.disabled = true
+	btn_record.disabled = true
+	output_label.show()
+	output_label.text = "Could not initialize inference for this model."
+
 func _init_task() -> void:
 	btn_load_audio.disabled = false
 	btn_record.disabled = false
@@ -72,6 +77,8 @@ func _load_audio(path: String) -> void:
 	if not running_mode == MediaPipeAudioTask.RUNNING_MODE_AUDIO_CLIPS:
 		running_mode = MediaPipeAudioTask.RUNNING_MODE_AUDIO_CLIPS
 		_init_task()
+		if btn_load_audio.disabled:
+			return
 	var stereo := true
 	var audio: AudioStream
 	var ext := path.get_extension()
@@ -98,6 +105,8 @@ func _toggle_record() -> void:
 		record_start = Time.get_ticks_msec()
 		running_mode = MediaPipeAudioTask.RUNNING_MODE_AUDIO_STREAM
 		_init_task()
+		if btn_record.disabled:
+			return
 		audio_record.playing = true
 		btn_record.text = "Stop Recording"
 	else:

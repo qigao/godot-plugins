@@ -4,6 +4,24 @@ GDMP is a native Godot 4.5 add-on for MediaPipe graphs and tasks. It accepts God
 
 ## Build
 
+### Build against a MediaPipe SDK
+
+The CMake build consumes the native MediaPipe Tasks 1.2.2 SDK from [qigao/mediapipe](https://github.com/qigao/mediapipe). The SDK workflow packages Linux, Android, and Windows for x64 and ARM64, plus macOS ARM64. Extract the matching SDK and point CMake at its `lib/cmake/MediaPipe` directory. The SDK includes its OpenCV libraries. Install the EGL and OpenGL ES development libraries on Linux.
+
+```sh
+cmake -S src/gdmp -B build-gdmp-sdk -G Ninja -DCMAKE_BUILD_TYPE=Release \
+  -DMediaPipe_DIR=/path/to/mediapipe-sdk/lib/cmake/MediaPipe -DGODOT_CPP_DIR=/path/to/godot-cpp
+cmake --build build-gdmp-sdk
+```
+
+On macOS ARM64, add `-DCMAKE_OSX_DEPLOYMENT_TARGET=15.0 -DCMAKE_OSX_ARCHITECTURES=arm64`. On Android, add `-DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake" -DANDROID_PLATFORM=android-26` and set `ANDROID_ABI` to `arm64-v8a` or `x86_64`. Use NDK 27.3.13750724.
+
+On Windows, use the LLVM-MinGW toolchain and the CPU SDK for the selected architecture. `GDMP.windows.dll` uses the statically linked XNNPACK delegate. MediaPipe 1.2.2 supports audio embedding in clip mode and removed the Face Stylizer task API.
+
+The build stages the add-on under `build-gdmp-sdk/addons/GDMP`. Run the [GDMP with MediaPipe SDK workflow](../../.github/workflows/gdmp-sdk.yml) with a published SDK tag and the SHA-256 of its `SHA256SUMS` file. It builds GDMP for the seven SDK targets and exercises the inference demo on Linux x64 and ARM64.
+
+### Build from MediaPipe source
+
 Install Bazel 6.5.0, Python 3.11 or newer, curl, Git, tar, and the platform's C++ toolchain. Build Android with NDK 27.3.13750724 by setting `ANDROID_NDK_HOME` to the NDK directory.
 
 ```sh
@@ -17,16 +35,20 @@ The source profile is the default. macOS uses it to preserve deployment compatib
 
 Copy `build-mediapipe/addons/GDMP` to the Godot project's `addons/` directory, open the project in Godot, and enable **GDMP** under **Project Settings → Plugins**. Build several targets into the same output directory to assemble a multi-platform add-on.
 
-| Target | Architectures | CI coverage |
+| Target | Architectures | Inference backend |
 | --- | --- | --- |
-| Linux | x86_64, arm64 | x86_64 Godot inference |
-| macOS | arm64, x86_64 | arm64 Godot inference |
-| Android | arm64, x86_64 | arm64 link, dependencies, and 16 KiB ELF alignment |
-| Windows | x86_64 | Upstream desktop configuration |
-| iOS | arm64 and simulators | Upstream XCFramework configuration |
-| Web | wasm32 | Upstream Emscripten configuration |
+| Linux | x86_64, arm64 | EGL and OpenGL ES 3.1+ |
+| macOS | arm64, x86_64 | Metal inference |
+| Android | arm64, x86_64 | EGL and OpenGL ES 3.1+ |
+| Windows | x86_64, arm64 | CPU with XNNPACK (CMake SDK build) |
+| iOS | arm64 and simulators | Metal inference |
+| Web | wasm32 | GPU inference backend required |
 
 [Native source and dependency pins](../../src/gdmp/UPSTREAM.md)
+
+GDMP selects the CPU delegate on Windows and the GPU delegate on GPU-enabled builds. Some upstream pipelines use separate CPU stages, including gesture classification and optional face blendshape inference. The Godot demo displays results through the Compatibility renderer.
+
+Linux CI uses surfaceless EGL to exercise the OpenGL ES code path. A software Mesa renderer can run that check, so physical GPU compatibility requires device testing.
 
 ## Process a camera frame
 

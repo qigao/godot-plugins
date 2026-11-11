@@ -13,7 +13,6 @@ func _init_task() -> void:
 	if file == null:
 		return
 	var base_options := MediaPipeTaskBaseOptions.new()
-	base_options.delegate = delegate
 	base_options.model_asset_buffer = file.get_buffer(file.get_length())
 	task = MediaPipeImageSegmenter.new()
 	if not task.initialize(base_options, running_mode):

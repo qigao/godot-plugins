@@ -11,12 +11,13 @@ func _init_task() -> void:
 	if file == null:
 		return
 	var base_options := MediaPipeTaskBaseOptions.new()
-	base_options.delegate = delegate
 	base_options.model_asset_buffer = file.get_buffer(file.get_length())
 	var classifier_options := MediaPipeClassifierOptions.new()
 	classifier_options.score_threshold = 0.5
 	task = MediaPipeAudioClassifier.new()
-	task.initialize(base_options, running_mode, classifier_options)
+	if not task.initialize(base_options, running_mode, classifier_options):
+		_task_initialization_failed()
+		return
 	task.result_callback.connect(self._result_callback, ConnectFlags.CONNECT_DEFERRED)
 	super()
 

@@ -5,6 +5,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "@godot-cpp//:godot",
+        "@mediapipe//mediapipe/framework/port",
         "@mediapipe//mediapipe/tasks/cc/core:base_options",
     ],
 )

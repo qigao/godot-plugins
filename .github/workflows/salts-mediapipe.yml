@@ -97,6 +97,11 @@ jobs:
           fi
           printf '%s  %s\n' "$SHA" "$file" | shasum -a 256 -c -
           chmod +x "$file"
+      - name: Install Linux EGL and OpenGL ES libraries
+        if: startsWith(matrix.platform, 'linux-')
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends libegl-dev libgles-dev libegl-mesa0 libgl1-mesa-dri
       - name: Build the GDMP GDExtension
         shell: bash
         env:
@@ -112,13 +117,14 @@ jobs:
           fi
           python3 -B src/gdmp/build.py "$TARGET" --arch "$ARCH" \
             --bazel "build-mediapipe/downloads/$BAZEL" --opencv "$OPENCV"
-      - name: Run face, hand, and pose inference in Godot
+      - name: Run GPU face, hand, and pose inference in Godot
         if: matrix.target == 'desktop'
         shell: bash
         env:
           ASSET: ${{ matrix.godot_asset }}
           SHA: ${{ matrix.godot_sha }}
           GODOT_BIN: ${{ matrix.godot_bin }}
+          EGL_PLATFORM: surfaceless
         run: |
           curl -fsSL --retry 3 "https://github.com/godotengine/godot-builds/releases/download/4.5.2-stable/$ASSET" -o "$RUNNER_TEMP/$ASSET"
           printf '%s  %s\n' "$SHA" "$RUNNER_TEMP/$ASSET" | shasum -a 256 -c -
@@ -129,6 +135,7 @@ jobs:
         shell: bash
         env:
           GODOT_BIN: ${{ matrix.godot_bin }}
+          EGL_PLATFORM: surfaceless
         run: |
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends libpipewire-0.3-dev libx11-dev libxext-dev

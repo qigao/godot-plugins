@@ -14,7 +14,7 @@
 #include "mediapipe/tasks/cc/core/base_options.h"
 
 using namespace godot;
-using namespace mediapipe::tasks::core;
+using mediapipe::tasks::core::BaseOptions;
 
 // Common properties of a GDMP task class.
 // bool _registered: a internal bool for indicating that if this task has been registered.
@@ -54,7 +54,6 @@ class MediaPipeTaskBaseOptions : public RefCounted {
 	private:
 		PackedByteArray model_asset_buffer;
 		String model_asset_path;
-		int delegate;
 
 	protected:
 		static void _bind_methods();

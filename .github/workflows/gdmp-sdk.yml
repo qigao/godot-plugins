@@ -1,0 +1,138 @@
+name: GDMP with MediaPipe SDK
+
+on:
+  workflow_dispatch:
+    inputs:
+      sdk_tag:
+        description: MediaPipe SDK release tag
+        required: true
+        type: string
+      sdk_checksums_sha256:
+        description: SHA-256 of the release SHA256SUMS file
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.target }} ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux
+            arch: x64
+            runner: ubuntu-24.04
+            godot_arch: x86_64
+            godot_sha: 87f6e6be292929e363d15ed9052f277b2ba4e95ed994e1e099048097be2dfd03
+          - target: linux
+            arch: arm64
+            runner: ubuntu-24.04-arm
+            godot_arch: arm64
+            godot_sha: 97ad6d1b74020bd591520e4f8810c6a07451af75eefa0932f57daeb805124618
+          - target: android
+            arch: x64
+            runner: ubuntu-24.04
+            android_abi: x86_64
+          - target: android
+            arch: arm64
+            runner: ubuntu-24.04
+            android_abi: arm64-v8a
+          - target: macos
+            arch: arm64
+            runner: macos-15
+            osx_arch: arm64
+          - target: windows
+            arch: x64
+            runner: windows-2025
+          - target: windows
+            arch: arm64
+            runner: windows-11-arm
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: qigao/vcpkg-cache/.github/actions/setup-llvm-mingw@v0.1.3
+        id: mingw
+        if: matrix.target == 'windows'
+        with:
+          target: ${{ matrix.arch }}
+          build-type: toolchain-only
+      - name: Install EGL and OpenGL ES libraries
+        if: matrix.target == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends libegl-dev libgles-dev libegl-mesa0 libgl1-mesa-dri
+      - name: Build the GDMP extension
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+          ARCH: ${{ matrix.arch }}
+          SDK_TAG: ${{ inputs.sdk_tag }}
+          SDK_CHECKSUMS_SHA: ${{ inputs.sdk_checksums_sha256 }}
+          ANDROID_ABI: ${{ matrix.android_abi }}
+          OSX_ARCH: ${{ matrix.osx_arch }}
+          MINGW_TOOLCHAIN: ${{ steps.mingw.outputs.toolchain-file }}
+        run: |
+          [[ "$SDK_TAG" =~ ^sdk-v1\.2\.2(-[A-Za-z0-9.-]+)?$ ]]
+          [[ "$SDK_CHECKSUMS_SHA" =~ ^[0-9a-f]{64}$ ]]
+          inputs="$RUNNER_TEMP/gdmp"
+          mkdir -p "$inputs"/{bindings,mediapipe}
+          download() {
+            local url=$1 sha=$2 file=$3
+            curl -fsSL --retry 3 "$url" -o "$file"
+            if [[ "$TARGET" == windows ]]; then
+              printf '%s  %s\n' "$sha" "$file" | sha256sum -c -
+            else
+              printf '%s  %s\n' "$sha" "$file" | shasum -a 256 -c -
+            fi
+          }
+
+          release="https://github.com/qigao/mediapipe/releases/download/$SDK_TAG"
+          sdk="mediapipe-tasks-1.2.2-$TARGET-$ARCH.tar.gz"
+          download "$release/SHA256SUMS" "$SDK_CHECKSUMS_SHA" "$inputs/SHA256SUMS"
+          sdk_sha=$(awk -v file="$sdk" '$2 == file { print $1 }' "$inputs/SHA256SUMS")
+          [[ "$sdk_sha" =~ ^[0-9a-f]{64}$ ]]
+          download "$release/$sdk" "$sdk_sha" "$inputs/$sdk"
+          bindings=e83fd0904c13356ed1d4c3d09f8bb9132bdc6b77
+          download "https://codeload.github.com/godotengine/godot-cpp/tar.gz/$bindings" \
+            d4c03daf46c8bef4544614182b0762c3e32789151c7f8f44e8eb2053d5cddeba "$inputs/godot-cpp.tar.gz"
+          tar -xzf "$inputs/$sdk" -C "$inputs/mediapipe"
+          tar -xzf "$inputs/godot-cpp.tar.gz" --strip-components=1 -C "$inputs/bindings"
+
+          args=()
+          case "$TARGET" in
+            linux) args+=(-DCMAKE_CXX_COMPILER=clang++) ;;
+            macos) args+=(-DCMAKE_CXX_COMPILER=clang++ -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0
+                         "-DCMAKE_OSX_ARCHITECTURES=$OSX_ARCH") ;;
+            android) args+=("-DCMAKE_TOOLCHAIN_FILE=$ANDROID_HOME/ndk/27.3.13750724/build/cmake/android.toolchain.cmake"
+                           "-DANDROID_ABI=$ANDROID_ABI" -DANDROID_PLATFORM=android-26) ;;
+            windows) args+=("-DCMAKE_TOOLCHAIN_FILE=$MINGW_TOOLCHAIN") ;;
+          esac
+          cmake -S src/gdmp -B build-gdmp-sdk -G Ninja -DCMAKE_BUILD_TYPE=Release \
+            "-DCMAKE_PREFIX_PATH=$inputs/mediapipe" "-DGODOT_CPP_DIR=$inputs/bindings" "${args[@]}"
+          cmake --build build-gdmp-sdk --parallel 4
+      - name: Run the Linux inference demo
+        if: matrix.target == 'linux'
+        shell: bash
+        env:
+          GODOT_ARCH: ${{ matrix.godot_arch }}
+          GODOT_SHA: ${{ matrix.godot_sha }}
+          EGL_PLATFORM: surfaceless
+        run: |
+          inputs="$RUNNER_TEMP/gdmp"
+          engine="Godot_v4.5.2-stable_linux.$GODOT_ARCH"
+          curl -fsSL --retry 3 "https://github.com/godotengine/godot-builds/releases/download/4.5.2-stable/$engine.zip" \
+            -o "$inputs/godot.zip"
+          printf '%s  %s\n' "$GODOT_SHA" "$inputs/godot.zip" | shasum -a 256 -c -
+          unzip -q "$inputs/godot.zip" -d "$inputs/engine"
+          bash tests/mediapipe/run.sh build-gdmp-sdk "$inputs/engine/$engine"
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: gdmp-sdk-${{ matrix.target }}-${{ matrix.arch }}
+          path: build-gdmp-sdk/addons/GDMP
+          if-no-files-found: error

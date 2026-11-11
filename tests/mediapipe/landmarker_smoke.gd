@@ -14,6 +14,7 @@ func require(condition: bool, message: String) -> bool:
 
 func model_options(name: String) -> MediaPipeTaskBaseOptions:
 	var options := MediaPipeTaskBaseOptions.new()
+	options.delegate = MediaPipeTaskBaseOptions.DELEGATE_CPU if OS.get_name() == "Windows" else MediaPipeTaskBaseOptions.DELEGATE_GPU
 	options.model_asset_buffer = FileAccess.get_file_as_bytes("res://test-data/%s.task" % name)
 	return options
 
@@ -45,8 +46,10 @@ func run() -> void:
 		if not require(task != null and task.call("initialize", model_options(test[1])),
 				"Could not initialize " + test[0]):
 			return
+		var sample := Image.load_from_file("res://test-data/%s.jpg" % test[2])
+		sample.convert(Image.FORMAT_RGBA8)
 		var image := MediaPipeImage.new()
-		image.set_image(Image.load_from_file("res://test-data/%s.jpg" % test[2]))
+		image.set_image(sample)
 		if not check_landmarks(task.call("detect", image), test[3], test[4]):
 			return
 		print("%s returned %d landmarks" % [test[0], test[4]])
