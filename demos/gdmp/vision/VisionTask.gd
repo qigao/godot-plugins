@@ -106,7 +106,7 @@ func _task_initialization_failed() -> void:
 	btn_load_video.disabled = true
 	btn_open_camera.disabled = true
 	permission_dialog.title = "GDMP"
-	permission_dialog.dialog_text = "Could not initialize GPU inference for this model."
+	permission_dialog.dialog_text = "Could not initialize inference for this model."
 	permission_dialog.popup_centered()
 
 func _open_image() -> void:

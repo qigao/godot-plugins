@@ -4,7 +4,7 @@ The vision, text, and audio scenes are adapted from [GDMP-demo at `b70fdf9`](htt
 
 ## Run on desktop
 
-Build [Salts Camera](../../addons/salts_camera/README.md) and [GDMP](../../addons/GDMP/README.md) for your host. Use Godot 4.5.2 and a MediaPipe GPU backend supported by your device. Linux and Android require OpenGL ES 3.1+ for inference. macOS uses Metal for inference. Godot uses the Compatibility renderer for display. From the repository root, stage both add-ons and open the generated project.
+Build [Salts Camera](../../addons/salts_camera/README.md) and [GDMP](../../addons/GDMP/README.md) for your host. Use Godot 4.5.2. Windows x64 and ARM64 use XNNPACK for CPU inference. Linux and Android require OpenGL ES 3.1+ for inference. macOS uses Metal for inference. Godot uses the Compatibility renderer for display. From the repository root, stage both add-ons and open the generated project.
 
 ```sh
 bash demos/gdmp/stage.sh build build-mediapipe build-gdmp-demo

@@ -37,7 +37,7 @@ func _get_external_file() -> void:
 func _task_initialization_failed() -> void:
 	input_text.editable = false
 	output_label.show()
-	output_label.text = "Could not initialize GPU inference for this model."
+	output_label.text = "Could not initialize inference for this model."
 
 func _init_task() -> void:
 	input_text.editable = true

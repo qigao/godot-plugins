@@ -63,7 +63,7 @@ func _task_initialization_failed() -> void:
 	btn_load_audio.disabled = true
 	btn_record.disabled = true
 	output_label.show()
-	output_label.text = "Could not initialize GPU inference for this model."
+	output_label.text = "Could not initialize inference for this model."
 
 func _init_task() -> void:
 	btn_load_audio.disabled = false
