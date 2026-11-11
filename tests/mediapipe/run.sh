@@ -9,13 +9,18 @@ mkdir -p "$project/addons" "$project/test-data" "$project/.godot"
 cp -a "$out/addons/GDMP" "$project/addons/"
 cp "$tests/project.godot" "$tests/landmarker_smoke.gd" "$project/"
 
+checksum=(sha256sum -c -)
+if [[ $OSTYPE == darwin* ]]; then
+    checksum=(shasum -a 256 -c -)
+fi
+
 fetch() {
     local url=$1 sha=$2 name=${1##*/}
     if [[ ! -f "$project/test-data/$name" ]]; then
         curl -fsSL --retry 3 "$url" -o "$project/test-data/$name.part"
         mv -- "$project/test-data/$name.part" "$project/test-data/$name"
     fi
-    printf '%s  %s\n' "$sha" "$project/test-data/$name" | shasum -a 256 -c -
+    printf '%s  %s\n' "$sha" "$project/test-data/$name" | "${checksum[@]}"
 }
 
 fetch https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task \
