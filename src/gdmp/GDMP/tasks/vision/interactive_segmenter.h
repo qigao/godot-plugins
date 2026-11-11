@@ -6,14 +6,24 @@
 #include "godot_cpp/variant/rect2.hpp"
 #include "godot_cpp/variant/vector2.hpp"
 
+#if GDMP_MEDIAPIPE_SDK_1_2_2
+#include "mediapipe/tasks/cc/vision/interactive_segmenter_legacy/interactive_segmenter_legacy.h"
+#else
 #include "mediapipe/tasks/cc/vision/interactive_segmenter/interactive_segmenter.h"
+#endif
 
 #include "GDMP/framework/image.h"
 #include "GDMP/tasks/vision/image_segmenter.h"
 #include "GDMP/tasks/vision/vision_task.h"
 
 using namespace godot;
+#if GDMP_MEDIAPIPE_SDK_1_2_2
+using namespace mediapipe::tasks::vision::interactive_segmenter_legacy;
+using InteractiveSegmenter = InteractiveSegmenterLegacy;
+using InteractiveSegmenterOptions = InteractiveSegmenterLegacyOptions;
+#else
 using namespace mediapipe::tasks::vision::interactive_segmenter;
+#endif
 
 class MediaPipeInteractiveSegmenter : public MediaPipeVisionTask {
 		GDMP_VISION_TASK_CLASS(MediaPipeInteractiveSegmenter, InteractiveSegmenter)

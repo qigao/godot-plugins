@@ -12,23 +12,32 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
   endif()
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(gdmp_platform linux)
+elseif(WIN32)
+  set(gdmp_platform windows)
+  if(NOT MINGW OR NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    message(FATAL_ERROR "The Windows MediaPipe SDK requires LLVM-MinGW")
+  endif()
 else()
   message(FATAL_ERROR "No MediaPipe GPU SDK for ${CMAKE_SYSTEM_NAME}")
 endif()
 
+string(TOLOWER "${gdmp_cpu}" gdmp_cpu)
 if(gdmp_cpu MATCHES "^(aarch64|arm64|arm64-v8a)$")
   set(gdmp_arch arm64)
   set(sdk_arch arm64)
-elseif(gdmp_cpu STREQUAL "x86_64")
+elseif(gdmp_cpu MATCHES "^(x86_64|amd64)$")
   set(gdmp_arch x86_64)
   set(sdk_arch x64)
 else()
   message(FATAL_ERROR "GDMP requires a single x64 or ARM64 target, got '${gdmp_cpu}'")
 endif()
 
-find_package(MediaPipe 0.10.26 EXACT CONFIG REQUIRED)
+find_package(MediaPipe 1.2.2 EXACT CONFIG REQUIRED)
 if(NOT MediaPipe_GPU_ENABLED OR NOT MediaPipe_SDK_PLATFORM STREQUAL "${gdmp_platform}-${sdk_arch}")
   message(FATAL_ERROR "GDMP requires the GPU-enabled MediaPipe SDK for ${gdmp_platform}-${sdk_arch}")
+endif()
+if(WIN32 AND NOT MediaPipe_GPU_BACKEND STREQUAL "angle-vulkan")
+  message(FATAL_ERROR "GDMP on Windows requires the ANGLE/Vulkan SDK")
 endif()
 if(ANDROID)
   set(gdmp_android_api "${CMAKE_SYSTEM_VERSION}")
@@ -56,16 +65,21 @@ file(GLOB_RECURSE gdmp_sources CONFIGURE_DEPENDS
   GDMP/proto/*.cc
   GDMP/tasks/*.cc
   GDMP/util/*.cc)
+# MediaPipe 1.2.2 removed the Face Stylizer Tasks API.
+list(FILTER gdmp_sources EXCLUDE REGEX "/face_stylizer[.]cc$")
 add_library(gdmp SHARED
   GDMP/gdlibrary.cc
   GDMP/io/camera_helper.cc
   GDMP/io/camera_helper_stub.cc
   ${gdmp_sources})
-target_compile_features(gdmp PRIVATE cxx_std_17)
+target_compile_features(gdmp PRIVATE cxx_std_20)
+target_compile_definitions(gdmp PRIVATE GDMP_MEDIAPIPE_SDK_1_2_2=1)
 target_include_directories(gdmp PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(gdmp PRIVATE MediaPipe::Tasks godot::cpp)
 if(gdmp_platform STREQUAL "macos")
   target_link_options(gdmp PRIVATE "LINKER:-exported_symbol,_mediapipe_library_init")
+elseif(WIN32)
+  target_link_options(gdmp PRIVATE -static-libstdc++ -static-libgcc)
 else()
   set(export_map "${CMAKE_CURRENT_SOURCE_DIR}/GDMP/exports.lds")
   target_link_options(gdmp PRIVATE "LINKER:--version-script=${export_map}" "LINKER:-z,defs")
@@ -80,6 +94,14 @@ set(addon "${CMAKE_CURRENT_BINARY_DIR}/addons/GDMP")
 set_target_properties(gdmp PROPERTIES
   OUTPUT_NAME GDMP.${gdmp_platform}
   LIBRARY_OUTPUT_DIRECTORY "${addon}/libs/${gdmp_arch}")
+if(WIN32)
+  set_target_properties(gdmp PROPERTIES PREFIX ""
+    RUNTIME_OUTPUT_DIRECTORY "${addon}/libs/${gdmp_arch}")
+  add_custom_command(TARGET gdmp POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      ${MediaPipe_RUNTIME_DLLS} "$<TARGET_FILE_DIR:gdmp>"
+    VERBATIM)
+endif()
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../../addons/GDMP/" DESTINATION "${addon}")
 get_filename_component(mediapipe_sdk "${MediaPipe_DIR}/../../.." ABSOLUTE)
 file(COPY "${mediapipe_sdk}/licenses" DESTINATION "${addon}")

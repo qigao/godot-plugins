@@ -10,7 +10,19 @@ linux.x86_64 = "res://addons/GDMP/libs/x86_64/libGDMP.linux.so"
 macos.arm64 = "res://addons/GDMP/libs/arm64/libGDMP.macos.dylib"
 macos.x86_64 = "res://addons/GDMP/libs/x86_64/libGDMP.macos.dylib"
 windows.x86_64 = "res://addons/GDMP/libs/x86_64/GDMP.windows.dll"
+windows.arm64 = "res://addons/GDMP/libs/arm64/GDMP.windows.dll"
 android.arm64 = "res://addons/GDMP/libs/arm64/libGDMP.android.so"
 android.x86_64 = "res://addons/GDMP/libs/x86_64/libGDMP.android.so"
 ios = "res://addons/GDMP/libs/GDMP.ios.xcframework"
 web = "res://addons/GDMP/libs/GDMP.web.wasm"
+
+[dependencies]
+
+windows.x86_64 = {
+  "res://addons/GDMP/libs/x86_64/libEGL_qigao_mp.dll": "",
+  "res://addons/GDMP/libs/x86_64/libGLESv2_qigao_mp.dll": "",
+}
+windows.arm64 = {
+  "res://addons/GDMP/libs/arm64/libEGL_qigao_mp.dll": "",
+  "res://addons/GDMP/libs/arm64/libGLESv2_qigao_mp.dll": "",
+}
