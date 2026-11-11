@@ -14,7 +14,7 @@ func require(condition: bool, message: String) -> bool:
 
 func model_options(name: String) -> MediaPipeTaskBaseOptions:
 	var options := MediaPipeTaskBaseOptions.new()
-	options.delegate = MediaPipeTaskBaseOptions.DELEGATE_GPU
+	options.delegate = MediaPipeTaskBaseOptions.DELEGATE_CPU if OS.get_name() == "Windows" else MediaPipeTaskBaseOptions.DELEGATE_GPU
 	options.model_asset_buffer = FileAccess.get_file_as_bytes("res://test-data/%s.task" % name)
 	return options
 
@@ -65,5 +65,5 @@ func run() -> void:
 	for timestamp in [0, 33]:
 		if not check_landmarks(task.detect_video(frame, timestamp), "get_face_landmarks", 478):
 			return
-	print("GPU RGBA video inference passed at two increasing timestamps")
+	print("RGBA video inference passed at two increasing timestamps")
 	quit(0)

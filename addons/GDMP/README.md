@@ -6,7 +6,7 @@ GDMP is a native Godot 4.5 add-on for MediaPipe graphs and tasks. It accepts God
 
 ### Build against a MediaPipe SDK
 
-The CMake build consumes the native MediaPipe Tasks 1.2.2 SDK from [qigao/mediapipe](https://github.com/qigao/mediapipe) on Linux, Android, macOS, and Windows, each with an x64 and ARM64 archive. Extract the matching GPU-enabled SDK and point CMake at its `lib/cmake/MediaPipe` directory. The SDK includes its OpenCV libraries. Install the EGL and OpenGL ES development libraries on Linux.
+The CMake build consumes the native MediaPipe Tasks 1.2.2 SDK from [qigao/mediapipe](https://github.com/qigao/mediapipe) on Linux, Android, macOS, and Windows, each with an x64 and ARM64 archive. Extract the matching SDK and point CMake at its `lib/cmake/MediaPipe` directory. The SDK includes its OpenCV libraries. Install the EGL and OpenGL ES development libraries on Linux.
 
 ```sh
 cmake -S src/gdmp -B build-gdmp-sdk -G Ninja -DCMAKE_BUILD_TYPE=Release \
@@ -16,7 +16,7 @@ cmake --build build-gdmp-sdk
 
 On macOS, add `-DCMAKE_OSX_DEPLOYMENT_TARGET=15.0` and set `CMAKE_OSX_ARCHITECTURES` to `arm64` or `x86_64` for the selected archive. On Android, add `-DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake" -DANDROID_PLATFORM=android-26` and set `ANDROID_ABI` to `arm64-v8a` or `x86_64`. Use NDK 27.3.13750724.
 
-On Windows, use the LLVM-MinGW toolchain for the selected architecture. The build stages the SDK's private ANGLE DLLs beside `GDMP.windows.dll`. The extension uses Vulkan for inference and reports an error when no compatible hardware device is available. Face Stylizer is unavailable in the 1.2.2 SDK because MediaPipe removed that task API.
+On Windows, use the LLVM-MinGW toolchain and the CPU SDK for the selected architecture. `GDMP.windows.dll` uses the statically linked XNNPACK delegate. Face Stylizer is unavailable in the 1.2.2 SDK because MediaPipe removed that task API.
 
 The build stages the add-on under `build-gdmp-sdk/addons/GDMP`. Run the [GDMP with MediaPipe SDK workflow](../../.github/workflows/gdmp-sdk.yml) with a published SDK tag and the SHA-256 of its `SHA256SUMS` file. It builds GDMP for all eight targets and exercises the inference demo on Linux x64 and ARM64.
 
@@ -40,13 +40,13 @@ Copy `build-mediapipe/addons/GDMP` to the Godot project's `addons/` directory, o
 | Linux | x86_64, arm64 | EGL and OpenGL ES 3.1+ |
 | macOS | arm64, x86_64 | Metal inference |
 | Android | arm64, x86_64 | EGL and OpenGL ES 3.1+ |
-| Windows | x86_64, arm64 | ANGLE / Vulkan (CMake SDK build) |
+| Windows | x86_64, arm64 | CPU with XNNPACK (CMake SDK build) |
 | iOS | arm64 and simulators | Metal inference |
 | Web | wasm32 | GPU inference backend required |
 
 [Native source and dependency pins](../../src/gdmp/UPSTREAM.md)
 
-GDMP requires the GPU delegate for MediaPipe Tasks. An explicit GPU request fails if MediaPipe cannot select a GPU inference calculator. Some upstream pipelines still use separate CPU stages, including gesture classification and optional face blendshape inference. The Godot demo uses the GPU delegate for its tasks and displays results through the Compatibility renderer.
+GDMP selects the CPU delegate on Windows and the GPU delegate on GPU-enabled builds. Some upstream pipelines use separate CPU stages, including gesture classification and optional face blendshape inference. The Godot demo displays results through the Compatibility renderer.
 
 Linux CI uses surfaceless EGL to exercise the OpenGL ES code path. A software Mesa renderer can run that check, so physical GPU compatibility requires device testing.
 

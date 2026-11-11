@@ -89,7 +89,11 @@ jobs:
           download() {
             local url=$1 sha=$2 file=$3
             curl -fsSL --retry 3 "$url" -o "$file"
-            printf '%s  %s\n' "$sha" "$file" | shasum -a 256 -c -
+            if [[ "$TARGET" == windows ]]; then
+              printf '%s  %s\n' "$sha" "$file" | sha256sum -c -
+            else
+              printf '%s  %s\n' "$sha" "$file" | shasum -a 256 -c -
+            fi
           }
 
           release="https://github.com/qigao/mediapipe/releases/download/$SDK_TAG"
