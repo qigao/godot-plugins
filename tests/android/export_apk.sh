@@ -13,11 +13,16 @@ tests=$(cd -- "$(dirname -- "$0")" && pwd)
 work=$(mktemp -d "$build/android-export.XXXXXX")
 trap 'rm -rf -- "$work"' EXIT
 project="$work/project"
-apk="$build/salts-camera-android-arm64.apk"
+arch=${6:-arm64}
+apk="$build/salts-camera-android-$arch.apk"
 
 mkdir -p "$project"
 cp -a "$tests/export_project/." "$project/"
 cp -a "$build/addons" "$project/"
+if [[ "$arch" == x86_64 ]]; then
+  sed -i 's/^architectures\/arm64-v8a=true$/architectures\/arm64-v8a=false/;
+          s/^architectures\/x86_64=false$/architectures\/x86_64=true/' "$project/export_presets.cfg"
+fi
 
 export XDG_CONFIG_HOME="$work/config" XDG_DATA_HOME="$work/data" XDG_CACHE_HOME="$work/cache"
 install -D "$template" "$XDG_DATA_HOME/godot/export_templates/4.5.2.stable/android_debug.apk"
@@ -46,4 +51,4 @@ path.write_text('[gd_resource type="EditorSettings" format=3]\n\n[resource]\n' +
 PY
 
 "$godot" --headless --path "$project" --export-debug "Android Camera" "$apk"
-python3 -B "$tests/check_apk.py" "$apk" "$build" "$android_sdk/build-tools/35.0.0"
+python3 -B "$tests/check_apk.py" "$apk" "$build" "$android_sdk/build-tools/35.0.0" "$arch"

@@ -9,9 +9,14 @@ Use CMake 3.27+, Ninja, Python 3, Godot 4.5.2, and `godot-cpp` at `e83fd0904c133
 | Target | SDK profile | Dependency prefix inside the archive | Toolchain |
 | --- | --- | --- | --- |
 | Linux x64 | `linux-clang-x64` | `vcpkg_installed/x64-linux` | Clang, PipeWire and X11 development libraries |
+| Linux ARM64 | `linux-clang-arm64` | `vcpkg_installed/arm64-linux` | Clang, PipeWire and X11 development libraries |
 | Windows x64 | `windows-llvm-mingw-x64` | `vcpkg_installed/qigao-x64-windows-llvm-mingw` | LLVM-MinGW `20261020` UCRT |
+| Windows ARM64 | SaltsBase v0.1.3 Core, Media, and TinyTest from source | `vcpkg_installed/qigao-arm64-windows-llvm-mingw` | LLVM-MinGW `20261020` UCRT |
 | macOS ARM64 | `macos-clang-arm64` | `vcpkg_installed/arm64-osx` | Clang, Xcode 16.4 at `/Applications/Xcode_16.4.app` |
 | Android ARM64 | `android-arm64` | `vcpkg_installed/arm64-android` | NDK r27d `27.3.13750724`, `arm64-v8a`, API 26 |
+| Android x64 | `android-x64` | `vcpkg_installed/x64-android` | NDK r27d `27.3.13750724`, `x86_64`, API 26 |
+
+The Windows ARM64 job builds the three SaltsBase components required by the plugin from the checksum-pinned v0.1.3 source archive, using [the SDK build](../../cmake/salts-base-media/CMakeLists.txt). It installs their CMake package before building and testing the add-on.
 
 From the repository root on Linux, configure the released SDK and dependency prefixes together.
 
@@ -27,7 +32,7 @@ ctest --test-dir build --output-on-failure
 
 Use the matching compiler paths and dependency prefix on Windows and macOS. On macOS, set `DEVELOPER_DIR` to `/Applications/Xcode_16.4.app/Contents/Developer`. For a build without the test projects, omit `BUILD_TESTING` and `GODOT_EXECUTABLE`. The extension and its runtime libraries are staged under `build/addons/salts_camera/`. Copy that directory to `addons/salts_camera/` in your Godot project and open it with Godot 4.5.2. The generated descriptor lists the platform built by that configure.
 
-On Linux, cross-build the Android add-on with the NDK at the path recorded in the published SaltsBase SDK.
+On Linux, cross-build the Android add-on with the NDK at the path recorded in the published SaltsBase SDK. The example targets ARM64. For x64, use the matching SDK and dependency prefixes, set `ANDROID_ABI=x86_64`, and pass `x86_64` after the NDK path to the bundle checker.
 
 ```sh
 ndk=/usr/local/lib/android/sdk/ndk/27.3.13750724
@@ -41,15 +46,15 @@ cmake --build build-android
 python3 tests/android/check_bundle.py build-android "$ndk"
 ```
 
-The Android check inspects the staged `.gdextension`, AArch64 shared objects and their runtime dependencies. For your Android export preset, enable ARM64, use a minimum SDK of 26 or higher, and enable **Camera** under **Permissions**.
+The Android check inspects the staged `.gdextension`, target shared objects and their runtime dependencies. For your Android export preset, enable the matching architecture, use a minimum SDK of 26 or higher, and enable **Camera** under **Permissions**.
 
-The Android CI job publishes `salts-camera-debug-arm64`, a signed test APK for camera and mode selection, live preview, and an audio output test. The sample uses the Godot 4.5.2 debug template and sets API 26 through Godot's prebuilt manifest export hook. To export it locally with Android build-tools 35.0.0, JDK 17, and `readelf`, run the following command after extracting `templates/android_debug.apk` from the official 4.5.2 export-template archive.
+Android CI publishes signed `salts-camera-debug-arm64` and `salts-camera-debug-x86_64` test APKs for camera and mode selection, live preview, and an audio output test. The sample uses the Godot 4.5.2 debug template and sets API 26 through Godot's prebuilt manifest export hook. To export it locally with Android build-tools 35.0.0, JDK 17, and `readelf`, run the following command after extracting `templates/android_debug.apk` from the official 4.5.2 export-template archive.
 
 ```sh
 bash tests/android/export_apk.sh build-android /path/to/godot /path/to/android_debug.apk "$ANDROID_HOME" "$JAVA_HOME"
 ```
 
-The output is `build-android/salts-camera-android-arm64.apk`. The export check verifies 16 KiB ZIP alignment and at least 16 KiB ELF load alignment for every packaged native library.
+The output is `build-android/salts-camera-android-arm64.apk`. Append `x86_64` to the command to export the x64 build. The export check verifies 16 KiB ZIP alignment and at least 16 KiB ELF load alignment for every packaged native library.
 
 ## Run the sample
 
