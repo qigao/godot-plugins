@@ -1,21 +1,35 @@
-name: GDMP with MediaPipe SDK
+name: GDMP CI
 
 on:
   pull_request:
     paths:
       - '.github/workflows/gdmp-sdk.yml'
       - 'addons/GDMP/**'
+      - 'addons/salts_camera/**'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'demos/gdmp/**'
       - 'src/gdmp/**'
+      - 'src/salts_camera/**'
       - 'tests/mediapipe/**'
       - 'tests/android/check_bundle.py'
+      - 'tests/android/export_project/addons/salts_camera_apk/**'
+      - 'tests/godot/preview_fixture.*'
   push:
     branches: [master]
     paths:
       - '.github/workflows/gdmp-sdk.yml'
       - 'addons/GDMP/**'
+      - 'addons/salts_camera/**'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'demos/gdmp/**'
       - 'src/gdmp/**'
+      - 'src/salts_camera/**'
       - 'tests/mediapipe/**'
       - 'tests/android/check_bundle.py'
+      - 'tests/android/export_project/addons/salts_camera_apk/**'
+      - 'tests/godot/preview_fixture.*'
   workflow_dispatch:
     inputs:
       sdk_tag:
@@ -32,7 +46,7 @@ permissions:
 
 jobs:
   build:
-    name: ${{ matrix.target }} ${{ matrix.arch }}
+    name: ${{ matrix.target == 'windows' && 'Windows LLVM-MinGW' || matrix.target }} ${{ matrix.arch }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
     strategy:
@@ -91,11 +105,18 @@ jobs:
         with:
           target: ${{ matrix.arch }}
           build-type: toolchain-only
-      - name: Install EGL and OpenGL ES libraries
+      - name: Install Linux system libraries
         if: matrix.target == 'linux'
+        shell: bash
+        env:
+          ARCH: ${{ matrix.arch }}
         run: |
+          packages=(libegl-dev libgles-dev libegl-mesa0 libgl1-mesa-dri)
+          if [[ "$ARCH" == x64 ]]; then
+            packages+=(libpipewire-0.3-dev libx11-dev libxext-dev)
+          fi
           sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends libegl-dev libgles-dev libegl-mesa0 libgl1-mesa-dri
+          sudo apt-get install --yes --no-install-recommends "${packages[@]}"
       - name: Build the GDMP extension
         shell: bash
         env:
@@ -170,6 +191,17 @@ jobs:
           mkdir "$inputs/engine"
           (cd "$inputs/engine" && cmake -E tar xf ../godot.zip)
           bash tests/mediapipe/run.sh build-gdmp-sdk "$inputs/engine/$GODOT_BIN"
+      - name: Run the GDMP demo with Salts Camera
+        if: matrix.target == 'linux' && matrix.arch == 'x64'
+        shell: bash
+        env:
+          GODOT_BIN: ${{ matrix.godot_bin }}
+          EGL_PLATFORM: surfaceless
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: |
+          godot="$RUNNER_TEMP/gdmp/engine/$GODOT_BIN"
+          bash tests/mediapipe/build_demo_camera.sh "$RUNNER_TEMP/demo-camera-inputs" "$godot" x86_64
+          bash tests/mediapipe/run_demo.sh build-gdmp-sdk "$godot" build-demo-camera
       - name: Check the Android library
         if: matrix.target == 'android'
         shell: bash

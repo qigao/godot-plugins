@@ -20,7 +20,7 @@ On macOS ARM64, add `-DCMAKE_OSX_DEPLOYMENT_TARGET=15.0 -DCMAKE_OSX_ARCHITECTURE
 
 On Windows, use the LLVM-MinGW toolchain and the CPU SDK for the selected architecture. `GDMP.windows.dll` uses the statically linked XNNPACK delegate. MediaPipe 1.2.2 supports audio embedding in clip mode and removed the Face Stylizer task API.
 
-The build stages the add-on under `build-gdmp-sdk/addons/GDMP`. The [GDMP with MediaPipe SDK workflow](../../.github/workflows/gdmp-sdk.yml) runs on relevant pull requests and master pushes with the published SDK 1.2.2. It builds seven targets, runs vision, text, and audio inference on the desktop runners, and checks the Android shared libraries for both ABIs. Manual runs accept a published SDK tag and the SHA-256 of its `SHA256SUMS` file.
+The build stages the add-on under `build-gdmp-sdk/addons/GDMP`. [GDMP CI](../../.github/workflows/gdmp-sdk.yml) uses the published SDK 1.2.2 on relevant pull requests and master pushes. It builds Windows with LLVM-MinGW, Linux and Android on x64 and ARM64, and macOS on ARM64. Desktop runners exercise vision, text, and audio inference. Linux x64 also runs the demo with Salts Camera. The Android jobs check both shared libraries. Manual runs accept a published SDK tag and the SHA-256 of its `SHA256SUMS` file.
 
 ### Build from MediaPipe source
 
@@ -31,7 +31,7 @@ python3 src/gdmp/build.py desktop
 python3 src/gdmp/build.py android --arch arm64
 ```
 
-Pass `--opencv sdk` to statically link the checksum-pinned [OCV v0.1.0 SDK](https://github.com/qigao/ocv/releases/tag/v0.1.0) on Linux or Android x64 and ARM64. Linux SDK packages target the Ubuntu 24.04 toolchain. Android SDK packages use NDK 27.3.13750724 and API 26. CI uses SDK mode on Linux x64 and Android ARM64.
+Pass `--opencv sdk` to statically link the checksum-pinned [OCV v0.1.0 SDK](https://github.com/qigao/ocv/releases/tag/v0.1.0) on Linux or Android x64 and ARM64. Linux SDK packages target the Ubuntu 24.04 toolchain. Android SDK packages use NDK 27.3.13750724 and API 26. [GDMP Source CI](../../.github/workflows/salts-mediapipe.yml) uses this mode on Linux x64 and Android ARM64.
 
 The source profile is the default. macOS uses it to preserve deployment compatibility because the v0.1.0 macOS archives target macOS 15.
 
