@@ -1,12 +1,12 @@
 # Godot Plugins
 
-Native extensions for Godot 4.5.2.
+Native extensions for Godot 4.7.2.
 
 ## Salts Camera
 
 [Build and use the add-on](addons/salts_camera/README.md) · [Design](docs/SALTS-CAMERA-DESIGN.md) · [Acceptance gates](docs/SALTS-CAMERA-ACCEPTANCE.md)
 
-The Godot 4.5.2 GDExtension uses `Salts::Media` from the installed SaltsBase v0.1.3 SDK. [SDK release](https://github.com/qigao/salts-base/releases/tag/v0.1.3)
+The Godot 4.7.2 GDExtension uses `Salts::Media` from the installed SaltsBase v0.1.3 SDK. [SDK release](https://github.com/qigao/salts-base/releases/tag/v0.1.3)
 
 - `SaltsCameraManager` and `SaltsCameraDevice` enumerate and configure real cameras.
 - Opt-in `SaltsCameraFeed` for Godot `CameraServer` / `CameraTexture` preview.

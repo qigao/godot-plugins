@@ -50,9 +50,9 @@ jobs:
             opencv: sdk
             bazel: bazel-6.5.0-linux-x86_64
             bazel_sha: a40ac69263440761199fcb8da47ad4e3f328cbe79ffbf4ecc14e5ba252857307
-            godot_asset: Godot_v4.5.2-stable_linux.x86_64.zip
-            godot_sha: 87f6e6be292929e363d15ed9052f277b2ba4e95ed994e1e099048097be2dfd03
-            godot_bin: Godot_v4.5.2-stable_linux.x86_64
+            godot_asset: Godot_v4.7.2-stable_linux.x86_64.zip
+            godot_sha: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+            godot_bin: Godot_v4.7.2-stable_linux.x86_64
           - platform: macos-arm64
             runner: macos-15
             target: desktop
@@ -60,8 +60,8 @@ jobs:
             opencv: source
             bazel: bazel-6.5.0-darwin-arm64
             bazel_sha: c6b6dc17efcdf13fba484c6fe0b6c3361b888ae7b9573bc25a2dbe8c502448eb
-            godot_asset: Godot_v4.5.2-stable_macos.universal.zip
-            godot_sha: 2a3f35cf5813b0d26e3f4c15dabc5e7c58407fceec7bae5291740772f72d141a
+            godot_asset: Godot_v4.7.2-stable_macos.universal.zip
+            godot_sha: c58a24e31d720be9d62f60cb5627c4e695fb72f21b0cfe1bc9ccaa9a3b3ba63e
             godot_bin: Godot.app/Contents/MacOS/Godot
           - platform: android-arm64
             runner: ubuntu-24.04
@@ -126,7 +126,7 @@ jobs:
           GODOT_BIN: ${{ matrix.godot_bin }}
           EGL_PLATFORM: surfaceless
         run: |
-          curl -fsSL --retry 3 "https://github.com/godotengine/godot-builds/releases/download/4.5.2-stable/$ASSET" -o "$RUNNER_TEMP/$ASSET"
+          curl -fsSL --retry 3 "https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/$ASSET" -o "$RUNNER_TEMP/$ASSET"
           printf '%s  %s\n' "$SHA" "$RUNNER_TEMP/$ASSET" | shasum -a 256 -c -
           unzip -q "$RUNNER_TEMP/$ASSET" -d "$RUNNER_TEMP/godot"
           bash tests/mediapipe/run.sh build-mediapipe "$RUNNER_TEMP/godot/$GODOT_BIN"

@@ -1,6 +1,6 @@
 # Salts Camera: Godot GDExtension design
 
-M0 targets Godot 4.5.2 and the installed SaltsBase v0.1.3 SDK from source commit `039d033c6f4a742dc5bac3b4e07908a3c4068a4f`. [SDK release](https://github.com/qigao/salts-base/releases/tag/v0.1.3)
+M0 targets Godot 4.7.2 and the installed SaltsBase v0.1.3 SDK from source commit `039d033c6f4a742dc5bac3b4e07908a3c4068a4f`. [SDK release](https://github.com/qigao/salts-base/releases/tag/v0.1.3)
 
 The Frame V2 and GPU frame roadmap is tracked in [salts-core #197](https://github.com/qigao/salts-core/issues/197). The Godot references are [godot-native-camera](https://github.com/godot-mobile-plugins/godot-native-camera) and [godot-cameraserver-extension](https://github.com/j20001970/godot-cameraserver-extension).
 
@@ -43,7 +43,7 @@ The adapter enumerates with `capture_list_video_devices()` and opens the chosen 
 
 The application opts into preview with `CameraServer.monitoring_feeds = true` and `feed.register_preview()`. The add-on owns one device handle per enumerated ID and checks the engine's assigned feed ID for collisions at registration. An activated feed without registration supports raw snapshots. Stable identity across the built-in and Salts providers requires separate device qualification.
 
-The build pins Godot 4.5.2 and the `godot-cpp` 4.5 bindings at `e83fd0904c13356ed1d4c3d09f8bb9132bdc6b77`. Other engine versions require their own ABI and load tests.
+The build pins Godot 4.7.2 and `godot-cpp` 10.0.0 at `507ed9d840c01a3c5b2a39af8bb4000bfac30bf5` with the 4.7 API. Other engine versions require their own ABI and load tests.
 
 Manager, device, and feed operations expose Godot error codes. Read `get_last_error()` after an empty enumeration, a failed open or create, or an activation that leaves `is_active()` false. A successful empty device list is valid on hosts without cameras. [GDScript usage](../addons/salts_camera/README.md#open-and-preview-a-camera)
 

@@ -1,6 +1,6 @@
 # Salts QR Code
 
-Salts QR Code is a Godot 4.5.2 GDExtension backed by ZXing-C++ 3.1.1. The add-on supports Linux, Windows and Android on x64 and ARM64, plus macOS ARM64.
+Salts QR Code is a Godot 4.7.2 GDExtension backed by ZXing-C++ 3.1.1. The add-on supports Linux, Windows and Android on x64 and ARM64, plus macOS ARM64.
 
 ## Use the add-on
 
@@ -25,7 +25,7 @@ The encoder uses medium error correction and a four-module white quiet zone. Cho
 
 ## Build from source
 
-Extract the ZXing-C++ 3.1.1 release archive and the pinned godot-cpp revision `e83fd0904c13356ed1d4c3d09f8bb9132bdc6b77`. The ZXing-C++ archive SHA-256 is `c3c02c29c0b519de7bd4e25b376e606e87f0761befd1282815642a2246613d14`. [ZXing-C++ source archive](https://github.com/zxing-cpp/zxing-cpp/releases/tag/v3.1.1) · [godot-cpp source](https://github.com/godotengine/godot-cpp/tree/e83fd0904c13356ed1d4c3d09f8bb9132bdc6b77)
+Extract the ZXing-C++ 3.1.1 release archive and the pinned godot-cpp revision `507ed9d840c01a3c5b2a39af8bb4000bfac30bf5`. The ZXing-C++ archive SHA-256 is `c3c02c29c0b519de7bd4e25b376e606e87f0761befd1282815642a2246613d14`. [ZXing-C++ source archive](https://github.com/zxing-cpp/zxing-cpp/releases/tag/v3.1.1) · [godot-cpp source](https://github.com/godotengine/godot-cpp/tree/507ed9d840c01a3c5b2a39af8bb4000bfac30bf5)
 
 ```sh
 cmake -S src/salts_qrcode -B build-qrcode -G Ninja -DCMAKE_BUILD_TYPE=Release \

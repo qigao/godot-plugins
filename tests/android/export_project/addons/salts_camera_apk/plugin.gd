@@ -54,5 +54,5 @@ class CameraManifestExport extends EditorExportPlugin:
 							return updated
 						break
 			chunk += chunk_size
-		push_error("Expected API 24 in the Godot 4.5.2 debug template manifest")
+		push_error("Expected API 24 in the Godot 4.7.2 debug template manifest")
 		return PackedByteArray()

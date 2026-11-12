@@ -22,42 +22,42 @@ jobs:
             sdk_sha: c9585bbb7ce002f2a8783edca809b56fac2768f7dc7eb1be98dd42b1ad171323
             triplet: x64-linux
             deps_sha: 49686968e2da4e41b44ab9fac26bc77fa2e51953ce6bf32666eaa48d2860e5f0
-            godot_asset: Godot_v4.5.2-stable_linux.x86_64.zip
-            godot_sha: 87f6e6be292929e363d15ed9052f277b2ba4e95ed994e1e099048097be2dfd03
-            godot_bin: Godot_v4.5.2-stable_linux.x86_64
+            godot_asset: Godot_v4.7.2-stable_linux.x86_64.zip
+            godot_sha: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+            godot_bin: Godot_v4.7.2-stable_linux.x86_64
           - runner: ubuntu-24.04-arm
             sdk: linux-clang-arm64
             sdk_sha: 09418af3bf9247e66e2237b940287f709f61c8327d7391e6d8d9fd3949feb0f7
             triplet: arm64-linux
             deps_sha: dccd0f5c853b6167ae75f008a94cad9a75b05c90d85d425fa4d7a9926d476862
-            godot_asset: Godot_v4.5.2-stable_linux.arm64.zip
-            godot_sha: 97ad6d1b74020bd591520e4f8810c6a07451af75eefa0932f57daeb805124618
-            godot_bin: Godot_v4.5.2-stable_linux.arm64
+            godot_asset: Godot_v4.7.2-stable_linux.arm64.zip
+            godot_sha: 5dd0d86405cf7e8adf79fb6377b38ba682a2846cb378ffe5364f38c01ad29b9d
+            godot_bin: Godot_v4.7.2-stable_linux.arm64
           - runner: windows-2025
             sdk: windows-llvm-mingw-x64
             windows_arch: x64
             sdk_sha: 5e4323fafd2133bac0fb85209d37c79771b83ee67c94cdaf09085e17c0ba6c68
             triplet: qigao-x64-windows-llvm-mingw
             deps_sha: 622117bdd82ade44a8421f924dbe235c78c5ba1c7f0d0f317447ab0299036189
-            godot_asset: Godot_v4.5.2-stable_win64.exe.zip
-            godot_sha: 3766090865330ab2a0ed33594520394b711c620b1378f9223904faeef60f2f14
-            godot_bin: Godot_v4.5.2-stable_win64_console.exe
+            godot_asset: Godot_v4.7.2-stable_win64.exe.zip
+            godot_sha: 731980f9608d61333e5baf54a2ef17210acc7a538446c0cb9969f002aca1e953
+            godot_bin: Godot_v4.7.2-stable_win64_console.exe
           - runner: windows-11-arm
             sdk: windows-llvm-mingw-arm64
             windows_arch: arm64
             sdk_sha: d4521665c7226721b51f8a0febec6721bb1a53e81761799f5d3a864f5c7ab97b
             triplet: qigao-arm64-windows-llvm-mingw
             deps_sha: 7513a00fd466ff1419c2108ff5dee6f679690de76c5a4488213cfc3d56de1677
-            godot_asset: Godot_v4.5.2-stable_windows_arm64.exe.zip
-            godot_sha: cedd4cb614a1c5c51ad1cd983b5d43c37e8c545ab9b397720edb885c1bd57538
-            godot_bin: Godot_v4.5.2-stable_windows_arm64_console.exe
+            godot_asset: Godot_v4.7.2-stable_windows_arm64.exe.zip
+            godot_sha: 2d206e0b1d2366eb3508971c670c52333dcd7218b818102d77ca7ceaa86892ba
+            godot_bin: Godot_v4.7.2-stable_windows_arm64_console.exe
           - runner: macos-15
             sdk: macos-clang-arm64
             sdk_sha: 8b35bb6d21b1137afd387b9930b934b626e69bfd54ec549a06c8f0c8ca1f8382
             triplet: arm64-osx
             deps_sha: d086743e2be66944dc7efcfadccb6a5c5481cf037a60040e3a3f356bfd3de88b
-            godot_asset: Godot_v4.5.2-stable_macos.universal.zip
-            godot_sha: 2a3f35cf5813b0d26e3f4c15dabc5e7c58407fceec7bae5291740772f72d141a
+            godot_asset: Godot_v4.7.2-stable_macos.universal.zip
+            godot_sha: c58a24e31d720be9d62f60cb5627c4e695fb72f21b0cfe1bc9ccaa9a3b3ba63e
             godot_bin: Godot.app/Contents/MacOS/Godot
           - runner: ubuntu-24.04
             sdk: android-arm64
@@ -66,9 +66,9 @@ jobs:
             sdk_sha: 339a9f8e9c8ba1ac3f0b7f6dd1bc3d304f13421ea9868d01bacfc77a9863c844
             triplet: arm64-android
             deps_sha: de7fce63de5af79e9fd0224620c7fd4f641704e44c02df147986015addb02341
-            godot_asset: Godot_v4.5.2-stable_linux.x86_64.zip
-            godot_sha: 87f6e6be292929e363d15ed9052f277b2ba4e95ed994e1e099048097be2dfd03
-            godot_bin: Godot_v4.5.2-stable_linux.x86_64
+            godot_asset: Godot_v4.7.2-stable_linux.x86_64.zip
+            godot_sha: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+            godot_bin: Godot_v4.7.2-stable_linux.x86_64
           - runner: ubuntu-24.04
             sdk: android-x64
             android_arch: x86_64
@@ -76,9 +76,9 @@ jobs:
             sdk_sha: 2bf58e559d70b073fbd3f39e6ef3021bdbeeb39a49a9eccd90e6bb243bb92785
             triplet: x64-android
             deps_sha: 7fa8560435b8f3d1f9ed253f442d495cbeb562b795a64771d3985c02fef7d233
-            godot_asset: Godot_v4.5.2-stable_linux.x86_64.zip
-            godot_sha: 87f6e6be292929e363d15ed9052f277b2ba4e95ed994e1e099048097be2dfd03
-            godot_bin: Godot_v4.5.2-stable_linux.x86_64
+            godot_asset: Godot_v4.7.2-stable_linux.x86_64.zip
+            godot_sha: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+            godot_bin: Godot_v4.7.2-stable_linux.x86_64
     env:
       CCACHE_DIR: ${{ github.workspace }}/build-cache/ccache
       CCACHE_BASEDIR: ${{ github.workspace }}
@@ -141,10 +141,10 @@ jobs:
           $dependencies = Join-Path $inputs 'dependencies'
           $bindings = Join-Path $inputs 'bindings'
           $engine = Join-Path $inputs 'engine'
-          $revision = 'e83fd0904c13356ed1d4c3d09f8bb9132bdc6b77'
+          $revision = '507ed9d840c01a3c5b2a39af8bb4000bfac30bf5'
           Expand-VerifiedArchive "https://github.com/qigao/vcpkg-cache/releases/download/v0.1.3/installed-$env:DEPS_TRIPLET.tar.xz" $env:DEPS_SHA $dependencies
-          Expand-VerifiedArchive "https://codeload.github.com/godotengine/godot-cpp/tar.gz/$revision" 'd4c03daf46c8bef4544614182b0762c3e32789151c7f8f44e8eb2053d5cddeba' $bindings
-          Expand-VerifiedArchive "https://github.com/godotengine/godot-builds/releases/download/4.5.2-stable/$env:GODOT_ASSET" $env:GODOT_SHA $engine
+          Expand-VerifiedArchive "https://codeload.github.com/godotengine/godot-cpp/tar.gz/$revision" '30da4ac295997061a6af81ae531510efd4e6a86e506eb4466edc0898ef3fe048' $bindings
+          Expand-VerifiedArchive "https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/$env:GODOT_ASSET" $env:GODOT_SHA $engine
           $godot = Join-Path $engine $env:GODOT_BIN
           if (!$IsWindows) {
             chmod +x $godot
@@ -207,16 +207,16 @@ jobs:
         id: android-template
         with:
           path: build-cache/godot/android_debug.apk
-          key: godot-4.5.2-android-debug-c52dcb8460598a477
+          key: godot-4.7.2-android-debug-59e0073f0fa59f55
       - name: Extract the pinned Godot Android debug template
         if: matrix.android_abi != '' && steps.android-template.outputs.cache-hit != 'true'
         shell: bash
         run: |
           set -euo pipefail
-          asset=Godot_v4.5.2-stable_export_templates.tpz
+          asset=Godot_v4.7.2-stable_export_templates.tpz
           archive="$RUNNER_TEMP/$asset"
-          curl -fsSL --retry 3 "https://github.com/godotengine/godot-builds/releases/download/4.5.2-stable/$asset" -o "$archive"
-          printf '%s  %s\n' ea50e5183f057d42b22120d0d0340205b98f51f8ff13c33c70fd4ac9077d2019 "$archive" | sha256sum -c -
+          curl -fsSL --retry 3 "https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/$asset" -o "$archive"
+          printf '%s  %s\n' f298490b8d44d934be425a5a65a51bf15f422428b229a06a6e11d9ffea248011 "$archive" | sha256sum -c -
           mkdir -p build-cache/godot
           unzip -p "$archive" templates/android_debug.apk > build-cache/godot/android_debug.apk
           rm "$archive"
@@ -229,7 +229,7 @@ jobs:
         run: |
           set -euo pipefail
           template=build-cache/godot/android_debug.apk
-          printf '%s  %s\n' c52dcb8460598a477fb533c427b6ea4ada343c36ad3b58a99059bb2927e754f3 "$template" | sha256sum -c -
+          printf '%s  %s\n' 59e0073f0fa59f552684a861d8f4266b0b34b488a140d6657eac7dd70d1a0a0d "$template" | sha256sum -c -
           bash tests/android/export_apk.sh build "$RUNNER_TEMP/salts-camera-inputs/engine/$GODOT_BIN" \
             "$template" "$ANDROID_HOME" "$JAVA_HOME_17_X64" "$ANDROID_ARCH"
       - uses: actions/upload-artifact@v7.0.2

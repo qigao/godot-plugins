@@ -4,7 +4,7 @@ The vision, text, and audio scenes are adapted from [GDMP-demo at `b70fdf9`](htt
 
 ## Run on desktop
 
-Build [Salts Camera](../../addons/salts_camera/README.md) and [GDMP](../../addons/GDMP/README.md) for your host. Use Godot 4.5.2. Windows x64 and ARM64 use XNNPACK for CPU inference. Linux and Android require OpenGL ES 3.1+ for inference. macOS uses Metal for inference. Godot uses the Compatibility renderer for display. From the repository root, stage both add-ons and open the generated project.
+Build [Salts Camera](../../addons/salts_camera/README.md) and [GDMP](../../addons/GDMP/README.md) for your host. Use Godot 4.7.2. Windows x64 and ARM64 use XNNPACK for CPU inference. Linux and Android require OpenGL ES 3.1+ for inference. macOS uses Metal for inference. Godot uses the Compatibility renderer for display. From the repository root, stage both add-ons and open the generated project.
 
 ```sh
 bash demos/gdmp/stage.sh build build-mediapipe build-gdmp-demo
@@ -24,6 +24,6 @@ bash demos/gdmp/stage.sh build build-mediapipe build-gdmp-demo-android build-and
 godot --editor --path build-gdmp-demo-android
 ```
 
-In Godot 4.5.2 with the matching Android templates installed, export the **Android ARM64** debug preset. The camera export hook sets API 26 on the prebuilt template. Camera access is requested when opening a device.
+In Godot 4.7.2 with the matching Android templates installed, export the **Android ARM64** debug preset. The camera export hook sets API 26 on the prebuilt template. Camera access is requested when opening a device.
 
 The in-tree GDMP version supplies the tasks listed in the demo menu. The upstream Holistic Landmarker depends on a binding absent from this version.
