@@ -3,7 +3,6 @@ name: Salts QR Code CI
 on:
   pull_request:
     paths:
-      - '.github/workflows/salts-qrcode.yml'
       - 'addons/salts_qrcode/**'
       - 'src/salts_qrcode/**'
       - 'tests/salts_qrcode/**'
@@ -11,7 +10,6 @@ on:
   push:
     branches: [master]
     paths:
-      - '.github/workflows/salts-qrcode.yml'
       - 'addons/salts_qrcode/**'
       - 'src/salts_qrcode/**'
       - 'tests/salts_qrcode/**'

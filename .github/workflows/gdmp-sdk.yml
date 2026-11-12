@@ -3,7 +3,6 @@ name: GDMP CI
 on:
   pull_request:
     paths:
-      - '.github/workflows/gdmp-sdk.yml'
       - 'addons/GDMP/**'
       - 'addons/salts_camera/**'
       - 'CMakeLists.txt'
@@ -18,7 +17,6 @@ on:
   push:
     branches: [master]
     paths:
-      - '.github/workflows/gdmp-sdk.yml'
       - 'addons/GDMP/**'
       - 'addons/salts_camera/**'
       - 'CMakeLists.txt'
