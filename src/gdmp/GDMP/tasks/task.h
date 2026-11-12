@@ -51,19 +51,23 @@ protected:                                                                      
 class MediaPipeTaskBaseOptions : public RefCounted {
 		GDCLASS(MediaPipeTaskBaseOptions, RefCounted)
 
-	private:
-		PackedByteArray model_asset_buffer;
-		String model_asset_path;
-
-	protected:
-		static void _bind_methods();
-
 	public:
 		enum Delegate {
 			DELEGATE_CPU = BaseOptions::Delegate::CPU,
 			DELEGATE_GPU = BaseOptions::Delegate::GPU,
 			DELEGATE_EDGETPU_NNAPI = BaseOptions::Delegate::EDGETPU_NNAPI,
 		};
+
+	private:
+		PackedByteArray model_asset_buffer;
+		String model_asset_path;
+		Delegate delegate;
+
+	protected:
+		static void _bind_methods();
+
+	public:
+		MediaPipeTaskBaseOptions();
 
 		PackedByteArray get_model_asset_buffer();
 		void set_model_asset_buffer(PackedByteArray buffer);
