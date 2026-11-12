@@ -156,12 +156,19 @@ jobs:
       - uses: actions/download-artifact@v8.0.1
         with:
           pattern: salts-qrcode-build-*
-          merge-multiple: true
-          path: dist/addons/salts_qrcode
-      - name: Verify packaged libraries
+          path: artifacts
+      - name: Assemble and verify the add-on
         shell: bash
         run: |
-          descriptor=dist/addons/salts_qrcode/salts_qrcode.gdextension
+          addon=dist/addons/salts_qrcode
+          mkdir -p "$addon"
+          # Use one copy of the metadata with consistent line endings.
+          metadata=artifacts/salts-qrcode-build-linux-x64
+          cp "$metadata"/{salts_qrcode.gdextension,README.md,THIRD_PARTY_NOTICES.txt,LICENSE.*} "$addon/"
+          for artifact in artifacts/salts-qrcode-build-*; do
+            cp -a "$artifact/bin" "$addon/"
+          done
+          descriptor="$addon/salts_qrcode.gdextension"
           mapfile -t libraries < <(sed -n 's/^[^=]*= "res:\/\/\(.*\)"$/\1/p' "$descriptor")
           [[ "${#libraries[@]}" -eq 7 ]]
           for library in "${libraries[@]}"; do
