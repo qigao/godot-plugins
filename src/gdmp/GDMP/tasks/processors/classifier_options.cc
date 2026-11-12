@@ -21,7 +21,7 @@ void MediaPipeClassifierOptions::_bind_methods() {
 }
 
 void MediaPipeClassifierOptions::set_display_names_locale(const String &p_display_names_locale) {
-	options.display_names_locale = p_display_names_locale.utf8();
+	options.display_names_locale = p_display_names_locale.utf8().get_data();
 }
 
 String MediaPipeClassifierOptions::get_display_names_locale() {
@@ -47,7 +47,7 @@ float MediaPipeClassifierOptions::get_score_threshold() {
 void MediaPipeClassifierOptions::set_category_allowlist(PackedStringArray p_category_allowlist) {
 	options.category_allowlist.resize(p_category_allowlist.size());
 	for (int i = 0; i < p_category_allowlist.size(); i++) {
-		options.category_allowlist[i] = p_category_allowlist[i].utf8();
+		options.category_allowlist[i] = p_category_allowlist[i].utf8().get_data();
 	}
 }
 
@@ -63,7 +63,7 @@ PackedStringArray MediaPipeClassifierOptions::get_category_allowlist() {
 void MediaPipeClassifierOptions::set_category_denylist(PackedStringArray p_category_denylist) {
 	options.category_denylist.resize(p_category_denylist.size());
 	for (int i = 0; i < p_category_denylist.size(); i++) {
-		options.category_denylist[i] = p_category_denylist[i].utf8();
+		options.category_denylist[i] = p_category_denylist[i].utf8().get_data();
 	}
 }
 
