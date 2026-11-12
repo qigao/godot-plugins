@@ -6,6 +6,12 @@ import re
 import subprocess
 
 
+ANDROID_TARGETS = {
+    "arm64": ("arm64-v8a", "aarch64-linux-android", "AArch64"),
+    "x86_64": ("x86_64", "x86_64-linux-android", "Advanced Micro Devices X86-64"),
+}
+
+
 def require_16k_load_alignment(name, headers):
     loads = re.findall(r"^\s*LOAD .+ (0x[0-9a-fA-F]+)$", headers, re.MULTILINE)
     if not loads:
@@ -20,30 +26,32 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("build", type=Path)
     parser.add_argument("ndk", type=Path)
+    parser.add_argument("arch", choices=ANDROID_TARGETS, nargs="?", default="arm64")
     args = parser.parse_args()
+    _, triple, machine = ANDROID_TARGETS[args.arch]
 
     descriptor = args.build / "addons/salts_camera/salts_camera.gdextension"
     config = ConfigParser()
     with descriptor.open() as source:
         config.read_file(source)
     entry = json.loads(config["configuration"]["entry_symbol"])
-    feature = "android.arm64"
+    feature = f"android.{args.arch}"
     extension = json.loads(config["libraries"][feature])
     dependencies = json.loads(config["dependencies"][feature])
-    prefix = "res://addons/salts_camera/bin/android/arm64/"
+    prefix = f"res://addons/salts_camera/bin/android/{args.arch}/"
     if extension != prefix + "libsalts_camera.so" or dependencies != {prefix + "libsalts.so": ""}:
         raise SystemExit("Unexpected Android paths in the GDExtension descriptor")
 
     llvm = args.ndk / "toolchains/llvm/prebuilt/linux-x86_64"
-    system_libs = {path.name for path in (llvm / "sysroot/usr/lib/aarch64-linux-android/26").glob("lib*.so")}
+    system_libs = {path.name for path in (llvm / f"sysroot/usr/lib/{triple}/26").glob("lib*.so")}
     packaged_libs = {Path(path).name for path in (extension, *dependencies)}
     for resource in (extension, *dependencies):
         library = args.build / resource.removeprefix("res://")
         elf = subprocess.check_output([
             llvm / "bin/llvm-readelf", "--file-header", "--program-headers", "--dynamic", "--dyn-syms", "--wide", library,
         ], text=True)
-        if not re.search(r"Machine:\s+AArch64", elf) or not re.search(r"Type:\s+DYN\b", elf):
-            raise SystemExit(f"{library.name} must be an AArch64 shared object")
+        if not re.search(rf"Machine:\s+{re.escape(machine)}$", elf, re.MULTILINE) or not re.search(r"Type:\s+DYN\b", elf):
+            raise SystemExit(f"{library.name} must be an Android {args.arch} shared object")
         needed = set(re.findall(r"\(NEEDED\).*?\[([^\]]+)\]", elf))
         unresolved = needed - system_libs - packaged_libs
         if unresolved:

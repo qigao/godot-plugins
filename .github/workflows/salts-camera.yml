@@ -25,14 +25,32 @@ jobs:
             godot_asset: Godot_v4.5.2-stable_linux.x86_64.zip
             godot_sha: 87f6e6be292929e363d15ed9052f277b2ba4e95ed994e1e099048097be2dfd03
             godot_bin: Godot_v4.5.2-stable_linux.x86_64
+          - runner: ubuntu-24.04-arm
+            sdk: linux-clang-arm64
+            sdk_sha: 09418af3bf9247e66e2237b940287f709f61c8327d7391e6d8d9fd3949feb0f7
+            triplet: arm64-linux
+            deps_sha: dccd0f5c853b6167ae75f008a94cad9a75b05c90d85d425fa4d7a9926d476862
+            godot_asset: Godot_v4.5.2-stable_linux.arm64.zip
+            godot_sha: 97ad6d1b74020bd591520e4f8810c6a07451af75eefa0932f57daeb805124618
+            godot_bin: Godot_v4.5.2-stable_linux.arm64
           - runner: windows-2025
             sdk: windows-llvm-mingw-x64
+            windows_arch: x64
             sdk_sha: 5e4323fafd2133bac0fb85209d37c79771b83ee67c94cdaf09085e17c0ba6c68
             triplet: qigao-x64-windows-llvm-mingw
             deps_sha: 622117bdd82ade44a8421f924dbe235c78c5ba1c7f0d0f317447ab0299036189
             godot_asset: Godot_v4.5.2-stable_win64.exe.zip
             godot_sha: 3766090865330ab2a0ed33594520394b711c620b1378f9223904faeef60f2f14
             godot_bin: Godot_v4.5.2-stable_win64_console.exe
+          - runner: windows-11-arm
+            sdk: windows-llvm-mingw-arm64
+            windows_arch: arm64
+            sdk_sha: d4521665c7226721b51f8a0febec6721bb1a53e81761799f5d3a864f5c7ab97b
+            triplet: qigao-arm64-windows-llvm-mingw
+            deps_sha: 7513a00fd466ff1419c2108ff5dee6f679690de76c5a4488213cfc3d56de1677
+            godot_asset: Godot_v4.5.2-stable_windows_arm64.exe.zip
+            godot_sha: cedd4cb614a1c5c51ad1cd983b5d43c37e8c545ab9b397720edb885c1bd57538
+            godot_bin: Godot_v4.5.2-stable_windows_arm64_console.exe
           - runner: macos-15
             sdk: macos-clang-arm64
             sdk_sha: 8b35bb6d21b1137afd387b9930b934b626e69bfd54ec549a06c8f0c8ca1f8382
@@ -43,9 +61,21 @@ jobs:
             godot_bin: Godot.app/Contents/MacOS/Godot
           - runner: ubuntu-24.04
             sdk: android-arm64
+            android_arch: arm64
+            android_abi: arm64-v8a
             sdk_sha: 339a9f8e9c8ba1ac3f0b7f6dd1bc3d304f13421ea9868d01bacfc77a9863c844
             triplet: arm64-android
             deps_sha: de7fce63de5af79e9fd0224620c7fd4f641704e44c02df147986015addb02341
+            godot_asset: Godot_v4.5.2-stable_linux.x86_64.zip
+            godot_sha: 87f6e6be292929e363d15ed9052f277b2ba4e95ed994e1e099048097be2dfd03
+            godot_bin: Godot_v4.5.2-stable_linux.x86_64
+          - runner: ubuntu-24.04
+            sdk: android-x64
+            android_arch: x86_64
+            android_abi: x86_64
+            sdk_sha: 2bf58e559d70b073fbd3f39e6ef3021bdbeeb39a49a9eccd90e6bb243bb92785
+            triplet: x64-android
+            deps_sha: 7fa8560435b8f3d1f9ed253f442d495cbeb562b795a64771d3985c02fef7d233
             godot_asset: Godot_v4.5.2-stable_linux.x86_64.zip
             godot_sha: 87f6e6be292929e363d15ed9052f277b2ba4e95ed994e1e099048097be2dfd03
             godot_bin: Godot_v4.5.2-stable_linux.x86_64
@@ -61,19 +91,27 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - uses: qigao/vcpkg-cache/.github/actions/setup-ccache@v0.1.3
+      - uses: qigao/vcpkg-cache/.github/actions/setup-llvm-mingw@v0.1.3
+        if: matrix.windows_arch != ''
+        id: mingw
+        with:
+          target: ${{ matrix.windows_arch }}
+          build-type: toolchain-only
       - uses: actions/cache@v6.1.0
         with:
           path: ${{ env.CCACHE_DIR }}
           key: salts-camera-0.1.3-${{ matrix.sdk }}-${{ hashFiles('CMakeLists.txt', 'cmake/**', 'src/**', 'tests/**') }}
           restore-keys: salts-camera-0.1.3-${{ matrix.sdk }}-
       - name: Install Linux system libraries
-        if: matrix.sdk == 'linux-clang-x64'
+        if: startsWith(matrix.sdk, 'linux-')
         shell: bash
         run: |
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends libpipewire-0.3-dev libx11-dev libxext-dev
-      - name: Build and test the GDExtension against the published SDK
+      - name: Build and test the GDExtension
         env:
+          ANDROID_ARCH: ${{ matrix.android_arch }}
+          ANDROID_ABI: ${{ matrix.android_abi }}
           SDK_PROFILE: ${{ matrix.sdk }}
           SDK_SHA: ${{ matrix.sdk_sha }}
           DEPS_TRIPLET: ${{ matrix.triplet }}
@@ -81,6 +119,7 @@ jobs:
           GODOT_ASSET: ${{ matrix.godot_asset }}
           GODOT_SHA: ${{ matrix.godot_sha }}
           GODOT_BIN: ${{ matrix.godot_bin }}
+          MINGW_TOOLCHAIN: ${{ steps.mingw.outputs.toolchain-file }}
         run: |
           $ErrorActionPreference = 'Stop'
           $PSNativeCommandUseErrorActionPreference = $true
@@ -103,7 +142,6 @@ jobs:
           $bindings = Join-Path $inputs 'bindings'
           $engine = Join-Path $inputs 'engine'
           $revision = 'e83fd0904c13356ed1d4c3d09f8bb9132bdc6b77'
-          Expand-VerifiedArchive "https://github.com/qigao/salts-base/releases/download/v0.1.3/salts-base-0.1.3-$env:SDK_PROFILE.tar" $env:SDK_SHA $sdk
           Expand-VerifiedArchive "https://github.com/qigao/vcpkg-cache/releases/download/v0.1.3/installed-$env:DEPS_TRIPLET.tar.xz" $env:DEPS_SHA $dependencies
           Expand-VerifiedArchive "https://codeload.github.com/godotengine/godot-cpp/tar.gz/$revision" 'd4c03daf46c8bef4544614182b0762c3e32789151c7f8f44e8eb2053d5cddeba' $bindings
           Expand-VerifiedArchive "https://github.com/godotengine/godot-builds/releases/download/4.5.2-stable/$env:GODOT_ASSET" $env:GODOT_SHA $engine
@@ -114,37 +152,43 @@ jobs:
           $prefix = Join-Path $dependencies "vcpkg_installed/$env:DEPS_TRIPLET"
           $godotCpp = Join-Path $bindings "godot-cpp-$revision"
 
-          if ($env:SDK_PROFILE -eq 'android-arm64') {
+          if ($env:SDK_PROFILE -eq 'windows-llvm-mingw-arm64') {
+            $source = Join-Path $inputs 'salts-source'
+            Expand-VerifiedArchive 'https://codeload.github.com/qigao/salts-base/tar.gz/refs/tags/v0.1.3' $env:SDK_SHA $source
+            cmake -S cmake/salts-base-media -B build-salts-media -G Ninja -DCMAKE_BUILD_TYPE=Release `
+              "-DCMAKE_TOOLCHAIN_FILE=$env:MINGW_TOOLCHAIN" "-DCMAKE_INSTALL_PREFIX=$sdk" `
+              "-DSALTS_BASE_SOURCE_DIR=$source/salts-base-0.1.3" "-DSALTS_DEPENDENCY_PREFIX=$prefix" `
+              -DCMAKE_C_COMPILER_LAUNCHER=ccache
+            cmake --build build-salts-media --parallel 4
+            cmake --install build-salts-media
+          } else {
+            Expand-VerifiedArchive "https://github.com/qigao/salts-base/releases/download/v0.1.3/salts-base-0.1.3-$env:SDK_PROFILE.tar" $env:SDK_SHA $sdk
+          }
+
+          if ($env:ANDROID_ABI) {
             $ndk = Join-Path $env:ANDROID_HOME 'ndk/27.3.13750724'
             cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF `
               "-DCMAKE_TOOLCHAIN_FILE=$ndk/build/cmake/android.toolchain.cmake" `
-              -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-26 -DANDROID_STL=c++_static `
+              "-DANDROID_ABI=$env:ANDROID_ABI" -DANDROID_PLATFORM=android-26 -DANDROID_STL=c++_static `
               -DCMAKE_CXX_COMPILER_LAUNCHER=ccache "-DCMAKE_PREFIX_PATH=$sdk;$prefix" `
               "-DCMAKE_FIND_ROOT_PATH=$sdk;$prefix" "-DGODOT_CPP_DIR=$godotCpp"
             cmake --build build --parallel 4
-            python tests/android/check_bundle.py build $ndk
+            python tests/android/check_bundle.py build $ndk $env:ANDROID_ARCH
             exit 0
           }
 
-          $cc = 'clang'
-          $cxx = 'clang++'
           if ($IsWindows) {
-            $compiler = Join-Path $inputs 'compiler'
-            $package = 'llvm-mingw-20261020-ucrt-x86_64'
-            Expand-VerifiedArchive "https://github.com/mstorsjo/llvm-mingw/releases/download/20261020/$package.zip" 'fd5462b7f5d93b2ff981fcd3f9c7e427e47f3203c64ea91c27bcc444eebd74cd' $compiler
-            $bin = Join-Path $compiler "$package/bin"
-            $env:PATH = "$bin;$env:PATH"
-            $cc = Join-Path $bin 'x86_64-w64-mingw32-clang.exe'
-            $cxx = Join-Path $bin 'x86_64-w64-mingw32-clang++.exe'
+            $compiler = @("-DCMAKE_TOOLCHAIN_FILE=$env:MINGW_TOOLCHAIN")
+          } else {
+            $compiler = @('-DCMAKE_C_COMPILER=clang', '-DCMAKE_CXX_COMPILER=clang++')
           }
           if ($IsMacOS) {
             $env:DEVELOPER_DIR = '/Applications/Xcode_16.4.app/Contents/Developer'
           }
 
           $configure = @('-S', '.', '-G', 'Ninja', '-DBUILD_TESTING=ON',
-            "-DCMAKE_C_COMPILER=$cc", "-DCMAKE_CXX_COMPILER=$cxx",
             '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache', "-DCMAKE_PREFIX_PATH=$sdk;$prefix",
-            "-DGODOT_CPP_DIR=$godotCpp", "-DGODOT_EXECUTABLE=$godot")
+            "-DGODOT_CPP_DIR=$godotCpp", "-DGODOT_EXECUTABLE=$godot") + $compiler
           cmake @configure -B build -DCMAKE_BUILD_TYPE=Release
           cmake --build build --parallel 4
           ctest --test-dir build --output-on-failure
@@ -159,13 +203,13 @@ jobs:
             ctest --test-dir build-sanitized -R '^salts_camera\.native$' --output-on-failure
           }
       - uses: actions/cache@v6.1.0
-        if: matrix.sdk == 'android-arm64'
+        if: matrix.android_abi != ''
         id: android-template
         with:
           path: build-cache/godot/android_debug.apk
           key: godot-4.5.2-android-debug-c52dcb8460598a477
       - name: Extract the pinned Godot Android debug template
-        if: matrix.sdk == 'android-arm64' && steps.android-template.outputs.cache-hit != 'true'
+        if: matrix.android_abi != '' && steps.android-template.outputs.cache-hit != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -177,20 +221,26 @@ jobs:
           unzip -p "$archive" templates/android_debug.apk > build-cache/godot/android_debug.apk
           rm "$archive"
       - name: Export and verify the signed Android APK
-        if: matrix.sdk == 'android-arm64'
+        if: matrix.android_abi != ''
         shell: bash
         env:
           GODOT_BIN: ${{ matrix.godot_bin }}
+          ANDROID_ARCH: ${{ matrix.android_arch }}
         run: |
           set -euo pipefail
           template=build-cache/godot/android_debug.apk
           printf '%s  %s\n' c52dcb8460598a477fb533c427b6ea4ada343c36ad3b58a99059bb2927e754f3 "$template" | sha256sum -c -
           bash tests/android/export_apk.sh build "$RUNNER_TEMP/salts-camera-inputs/engine/$GODOT_BIN" \
-            "$template" "$ANDROID_HOME" "$JAVA_HOME_17_X64"
+            "$template" "$ANDROID_HOME" "$JAVA_HOME_17_X64" "$ANDROID_ARCH"
       - uses: actions/upload-artifact@v7.0.2
-        if: matrix.sdk == 'android-arm64'
         with:
-          name: salts-camera-debug-arm64
-          path: build/salts-camera-android-arm64.apk
+          name: salts-camera-${{ matrix.sdk }}
+          path: build/addons/salts_camera
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7.0.2
+        if: matrix.android_abi != ''
+        with:
+          name: salts-camera-debug-${{ matrix.android_arch }}
+          path: build/salts-camera-android-${{ matrix.android_arch }}.apk
           if-no-files-found: error
           retention-days: 14

@@ -140,14 +140,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends libpipewire-0.3-dev libx11-dev libxext-dev
           godot="$RUNNER_TEMP/godot/$GODOT_BIN"
-          bash tests/mediapipe/build_demo_camera.sh "$RUNNER_TEMP/demo-camera-inputs" "$godot"
+          bash tests/mediapipe/build_demo_camera.sh "$RUNNER_TEMP/demo-camera-inputs" "$godot" x86_64
           bash tests/mediapipe/run_demo.sh build-mediapipe "$godot" build-demo-camera
       - name: Check the Android ARM64 library
         if: matrix.target == 'android'
         run: |
           python3 -B tests/mediapipe/check_android.py \
             build-mediapipe/addons/GDMP/libs/arm64/libGDMP.android.so \
-            "$ANDROID_HOME/ndk/27.3.13750724"
+            "$ANDROID_HOME/ndk/27.3.13750724" arm64
       - uses: actions/upload-artifact@v7.0.2
         with:
           name: GDMP-${{ matrix.platform }}

@@ -18,7 +18,7 @@ On macOS ARM64, add `-DCMAKE_OSX_DEPLOYMENT_TARGET=15.0 -DCMAKE_OSX_ARCHITECTURE
 
 On Windows, use the LLVM-MinGW toolchain and the CPU SDK for the selected architecture. `GDMP.windows.dll` uses the statically linked XNNPACK delegate. MediaPipe 1.2.2 supports audio embedding in clip mode and removed the Face Stylizer task API.
 
-The build stages the add-on under `build-gdmp-sdk/addons/GDMP`. Run the [GDMP with MediaPipe SDK workflow](../../.github/workflows/gdmp-sdk.yml) with a published SDK tag and the SHA-256 of its `SHA256SUMS` file. It builds GDMP for the seven SDK targets and exercises the inference demo on Linux x64 and ARM64.
+The build stages the add-on under `build-gdmp-sdk/addons/GDMP`. Run the [GDMP with MediaPipe SDK workflow](../../.github/workflows/gdmp-sdk.yml) with a published SDK tag and the SHA-256 of its `SHA256SUMS` file. It builds GDMP for the same seven targets as Salts Camera, runs face, hand, and pose inference on the desktop runners, and checks the Android shared libraries for both ABIs.
 
 ### Build from MediaPipe source
 
