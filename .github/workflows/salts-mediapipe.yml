@@ -1,9 +1,8 @@
-name: GDMP Source CI
+name: GDMP Source Tests
 
 on:
   pull_request:
     paths:
-      - '.github/workflows/salts-mediapipe.yml'
       - 'addons/GDMP/**'
       - 'src/gdmp/**'
       - 'tests/mediapipe/**'
@@ -11,7 +10,6 @@ on:
   push:
     branches: [master]
     paths:
-      - '.github/workflows/salts-mediapipe.yml'
       - 'addons/GDMP/**'
       - 'src/gdmp/**'
       - 'tests/mediapipe/**'
