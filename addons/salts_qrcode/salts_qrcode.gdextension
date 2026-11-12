@@ -1,0 +1,14 @@
+[configuration]
+entry_symbol = "salts_qrcode_library_init"
+compatibility_minimum = "4.5.2"
+compatibility_maximum = "4.5.2"
+reloadable = false
+
+[libraries]
+linux.x86_64 = "res://addons/salts_qrcode/bin/linux/x86_64/libsalts_qrcode.so"
+linux.arm64 = "res://addons/salts_qrcode/bin/linux/arm64/libsalts_qrcode.so"
+macos.arm64 = "res://addons/salts_qrcode/bin/macos/arm64/libsalts_qrcode.dylib"
+windows.x86_64 = "res://addons/salts_qrcode/bin/windows/x86_64/salts_qrcode.dll"
+windows.arm64 = "res://addons/salts_qrcode/bin/windows/arm64/salts_qrcode.dll"
+android.x86_64 = "res://addons/salts_qrcode/bin/android/x86_64/libsalts_qrcode.so"
+android.arm64 = "res://addons/salts_qrcode/bin/android/arm64/libsalts_qrcode.so"

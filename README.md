@@ -1,6 +1,6 @@
 # Godot Plugins
 
-Godot integrations built on top of qigao's native C11 libraries.
+Native extensions for Godot 4.5.2.
 
 ## Salts Camera
 
@@ -20,3 +20,7 @@ CI builds and tests the desktop extension and exports a signed Android ARM64 deb
 An in-tree import of the GDMP Godot add-on for MediaPipe graphs and tasks. It uses static OpenCV from qigao/ocv and accepts Godot images, including SaltsCamera snapshots. [Build and API](addons/GDMP/README.md)
 
 [Run the GDMP demo](demos/gdmp/README.md)
+
+## Salts QR Code
+
+Create QR Code images from text or bytes and decode them from Godot images using ZXing-C++. [Build and API](addons/salts_qrcode/README.md)

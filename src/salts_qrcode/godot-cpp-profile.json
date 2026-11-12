@@ -1,0 +1,9 @@
+{
+  "enabled_classes": [
+    "Engine",
+    "FileAccess",
+    "Image",
+    "OS",
+    "RefCounted"
+  ]
+}
