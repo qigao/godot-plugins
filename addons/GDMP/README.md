@@ -1,12 +1,14 @@
 # GDMP for Godot
 
-GDMP is a native Godot 4.5 add-on for MediaPipe graphs and tasks. It accepts Godot `Image` objects, including images decoded from a video and snapshots from SaltsCamera.
+GDMP is a native Godot 4.7 add-on for MediaPipe graphs and tasks, tested with Godot 4.7.2. It accepts Godot `Image` objects, including images decoded from a video and snapshots from SaltsCamera.
 
 ## Build
 
 ### Build against a MediaPipe SDK
 
 The CMake build consumes the native MediaPipe Tasks 1.2.2 SDK from [qigao/mediapipe](https://github.com/qigao/mediapipe). The SDK workflow packages Linux, Android, and Windows for x64 and ARM64, plus macOS ARM64. Extract the matching SDK and point CMake at its `lib/cmake/MediaPipe` directory. The SDK includes its OpenCV libraries. Install the EGL and OpenGL ES development libraries on Linux.
+
+Set `GODOT_CPP_DIR` to the extracted godot-cpp 10.0.0 source at `507ed9d840c01a3c5b2a39af8bb4000bfac30bf5`. CMake selects the Godot 4.7 API. [Bindings](https://github.com/godotengine/godot-cpp/tree/507ed9d840c01a3c5b2a39af8bb4000bfac30bf5)
 
 ```sh
 cmake -S src/gdmp -B build-gdmp-sdk -G Ninja -DCMAKE_BUILD_TYPE=Release \
@@ -18,7 +20,7 @@ On macOS ARM64, add `-DCMAKE_OSX_DEPLOYMENT_TARGET=15.0 -DCMAKE_OSX_ARCHITECTURE
 
 On Windows, use the LLVM-MinGW toolchain and the CPU SDK for the selected architecture. `GDMP.windows.dll` uses the statically linked XNNPACK delegate. MediaPipe 1.2.2 supports audio embedding in clip mode and removed the Face Stylizer task API.
 
-The build stages the add-on under `build-gdmp-sdk/addons/GDMP`. Run the [GDMP with MediaPipe SDK workflow](../../.github/workflows/gdmp-sdk.yml) with a published SDK tag and the SHA-256 of its `SHA256SUMS` file. It builds GDMP for the same seven targets as Salts Camera, runs face, hand, and pose inference on the desktop runners, and checks the Android shared libraries for both ABIs.
+The build stages the add-on under `build-gdmp-sdk/addons/GDMP`. [GDMP CI](../../.github/workflows/gdmp-sdk.yml) uses the published SDK 1.2.2 on relevant pull requests and master pushes. It builds Windows with LLVM-MinGW, Linux and Android on x64 and ARM64, and macOS on ARM64. Desktop runners exercise vision, text, and audio inference. Linux x64 also runs the demo with Salts Camera. The Android jobs check both shared libraries. Manual runs accept a published SDK tag and the SHA-256 of its `SHA256SUMS` file.
 
 ### Build from MediaPipe source
 
@@ -29,7 +31,7 @@ python3 src/gdmp/build.py desktop
 python3 src/gdmp/build.py android --arch arm64
 ```
 
-Pass `--opencv sdk` to statically link the checksum-pinned [OCV v0.1.0 SDK](https://github.com/qigao/ocv/releases/tag/v0.1.0) on Linux or Android x64 and ARM64. Linux SDK packages target the Ubuntu 24.04 toolchain. Android SDK packages use NDK 27.3.13750724 and API 26. CI uses SDK mode on Linux x64 and Android ARM64.
+Pass `--opencv sdk` to statically link the checksum-pinned [OCV v0.1.0 SDK](https://github.com/qigao/ocv/releases/tag/v0.1.0) on Linux or Android x64 and ARM64. Linux SDK packages target the Ubuntu 24.04 toolchain. Android SDK packages use NDK 27.3.13750724 and API 26. [GDMP Source CI](../../.github/workflows/salts-mediapipe.yml) uses this mode on Linux x64 and Android ARM64.
 
 The source profile is the default. macOS uses it to preserve deployment compatibility because the v0.1.0 macOS archives target macOS 15.
 
@@ -46,7 +48,7 @@ Copy `build-mediapipe/addons/GDMP` to the Godot project's `addons/` directory, o
 
 [Native source and dependency pins](../../src/gdmp/UPSTREAM.md)
 
-GDMP selects the CPU delegate on Windows and the GPU delegate on GPU-enabled builds. Some upstream pipelines use separate CPU stages, including gesture classification and optional face blendshape inference. The Godot demo displays results through the Compatibility renderer.
+GDMP defaults to CPU on Windows and GPU on GPU-enabled builds. Set `MediaPipeTaskBaseOptions.delegate` to `DELEGATE_CPU` for a CPU task on any build. The demo uses CPU for Face Detector, Text Classifier, Language Detector, and Audio Classifier. The Godot demo displays results through the Compatibility renderer.
 
 Linux CI uses surfaceless EGL to exercise the OpenGL ES code path. A software Mesa renderer can run that check, so physical GPU compatibility requires device testing.
 

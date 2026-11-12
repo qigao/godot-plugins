@@ -2,17 +2,15 @@ cmake_minimum_required(VERSION 3.27)
 project(SaltsCamera LANGUAGES C CXX)
 
 find_package(SaltsBase 0.1.3 EXACT CONFIG REQUIRED)
-set(GODOT_CPP_DIR "" CACHE PATH "godot-cpp checkout at e83fd0904c13356ed1d4c3d09f8bb9132bdc6b77")
+set(GODOT_CPP_DIR "" CACHE PATH "godot-cpp checkout at 507ed9d840c01a3c5b2a39af8bb4000bfac30bf5")
 if(NOT EXISTS "${GODOT_CPP_DIR}/CMakeLists.txt")
   message(FATAL_ERROR "Set GODOT_CPP_DIR to the pinned godot-cpp source directory")
 endif()
 set(GODOTCPP_BUILD_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/godot-cpp-profile.json")
+set(GODOTCPP_API_VERSION 4.7)
 set(GODOTCPP_TARGET template_release)
 set(GODOTCPP_SYSTEM_HEADERS ON)
 add_subdirectory("${GODOT_CPP_DIR}" godot-cpp EXCLUDE_FROM_ALL)
-# The pinned bindings use free/realloc without their header in this source.
-set_property(SOURCE "${GODOT_CPP_DIR}/src/godot.cpp" TARGET_DIRECTORY godot-cpp
-  APPEND PROPERTY COMPILE_OPTIONS -include cstdlib)
 
 add_library(salts_camera_frames STATIC
   src/salts_camera/frame_layout.cpp
@@ -133,9 +131,9 @@ add_camera_library(salts_camera "${CMAKE_CURRENT_BINARY_DIR}")
 option(BUILD_TESTING "Build the Salts Camera native and Godot tests" OFF)
 include(CTest)
 if(BUILD_TESTING)
-  set(GODOT_EXECUTABLE "" CACHE FILEPATH "Godot 4.5.2 executable for headless tests")
+  set(GODOT_EXECUTABLE "" CACHE FILEPATH "Godot 4.7.2 executable for headless tests")
   if(NOT EXISTS "${GODOT_EXECUTABLE}")
-    message(FATAL_ERROR "Set GODOT_EXECUTABLE to the Godot 4.5.2 executable")
+    message(FATAL_ERROR "Set GODOT_EXECUTABLE to the Godot 4.7.2 executable")
   endif()
   add_executable(salts_camera_native_tests tests/native/frame_tests.cpp)
   target_link_libraries(salts_camera_native_tests PRIVATE salts_camera_frames Salts::Media Salts::TinyTest)

@@ -55,13 +55,12 @@ endif()
 if(gdmp_platform STREQUAL "macos" AND CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS MediaPipe_MACOS_MINIMUM)
   message(FATAL_ERROR "Set CMAKE_OSX_DEPLOYMENT_TARGET to ${MediaPipe_MACOS_MINIMUM} or later for the MediaPipe SDK")
 endif()
-set(GODOT_CPP_DIR "" CACHE PATH "Godot C++ bindings at e83fd0904c13356ed1d4c3d09f8bb9132bdc6b77")
+set(GODOT_CPP_DIR "" CACHE PATH "Godot C++ bindings at 507ed9d840c01a3c5b2a39af8bb4000bfac30bf5")
 set(GODOTCPP_BUILD_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/godot-cpp-profile.json")
+set(GODOTCPP_API_VERSION 4.7)
 set(GODOTCPP_TARGET template_release)
 set(GODOTCPP_SYSTEM_HEADERS ON)
 add_subdirectory("${GODOT_CPP_DIR}" godot-cpp EXCLUDE_FROM_ALL)
-set_property(SOURCE "${GODOT_CPP_DIR}/src/godot.cpp" TARGET_DIRECTORY godot-cpp
-  APPEND PROPERTY COMPILE_OPTIONS -include cstdlib)
 
 file(GLOB_RECURSE gdmp_sources CONFIGURE_DEPENDS
   GDMP/framework/*.cc

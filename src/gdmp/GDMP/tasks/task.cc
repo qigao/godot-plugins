@@ -7,6 +7,18 @@
 #error "GDMP requires a GPU-enabled MediaPipe build"
 #endif
 
+namespace {
+
+#if MEDIAPIPE_DISABLE_GPU
+constexpr auto default_delegate = MediaPipeTaskBaseOptions::DELEGATE_CPU;
+#else
+constexpr auto default_delegate = MediaPipeTaskBaseOptions::DELEGATE_GPU;
+#endif
+
+} // namespace
+
+MediaPipeTaskBaseOptions::MediaPipeTaskBaseOptions() : delegate(default_delegate) {}
+
 void MediaPipeTaskBaseOptions::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_model_asset_buffer"), &MediaPipeTaskBaseOptions::get_model_asset_buffer);
 	ClassDB::bind_method(D_METHOD("set_model_asset_buffer"), &MediaPipeTaskBaseOptions::set_model_asset_buffer);
@@ -39,15 +51,12 @@ void MediaPipeTaskBaseOptions::set_model_asset_path(const String &path) {
 }
 
 MediaPipeTaskBaseOptions::Delegate MediaPipeTaskBaseOptions::get_delegate() {
-#if MEDIAPIPE_DISABLE_GPU
-	return DELEGATE_CPU;
-#else
-	return DELEGATE_GPU;
-#endif
+	return delegate;
 }
 
-void MediaPipeTaskBaseOptions::set_delegate(Delegate delegate) {
-	ERR_FAIL_COND_MSG(delegate != get_delegate(), "The requested delegate is unavailable in this GDMP build.");
+void MediaPipeTaskBaseOptions::set_delegate(Delegate value) {
+	ERR_FAIL_COND_MSG(value != DELEGATE_CPU && value != default_delegate, "The requested delegate is unavailable in this GDMP build.");
+	delegate = value;
 }
 
 std::unique_ptr<BaseOptions> MediaPipeTaskBaseOptions::get_base_options() {

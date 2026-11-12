@@ -11,6 +11,7 @@ func _init_task() -> void:
 	if file == null:
 		return
 	var base_options := MediaPipeTaskBaseOptions.new()
+	base_options.delegate = MediaPipeTaskBaseOptions.DELEGATE_CPU
 	base_options.model_asset_buffer = file.get_buffer(file.get_length())
 	var classifier_options := MediaPipeClassifierOptions.new()
 	classifier_options.score_threshold = 0.5

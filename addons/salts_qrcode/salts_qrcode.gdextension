@@ -1,7 +1,7 @@
 [configuration]
 entry_symbol = "salts_qrcode_library_init"
-compatibility_minimum = "4.5.2"
-compatibility_maximum = "4.5.2"
+compatibility_minimum = "4.7.2"
+compatibility_maximum = "4.7.2"
 reloadable = false
 
 [libraries]

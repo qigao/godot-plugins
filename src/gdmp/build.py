@@ -22,9 +22,9 @@ ARCHIVES = {
         "mediapipe-0.10.26.tar.gz",
     ),
     "godot-cpp": (
-        f"{CODELOAD}/godotengine/godot-cpp/tar.gz/e83fd0904c13356ed1d4c3d09f8bb9132bdc6b77",
-        "d4c03daf46c8bef4544614182b0762c3e32789151c7f8f44e8eb2053d5cddeba",
-        "godot-cpp.tar.gz",
+        f"{CODELOAD}/godotengine/godot-cpp/tar.gz/507ed9d840c01a3c5b2a39af8bb4000bfac30bf5",
+        "30da4ac295997061a6af81ae531510efd4e6a86e506eb4466edc0898ef3fe048",
+        "godot-cpp-10.0.0-stable.tar.gz",
     ),
 }
 OCV_SOURCE = (
@@ -118,10 +118,11 @@ def prepare(out, android, ocv_sdk):
     from binding_generator import generate_bindings
     from build_profile import generate_trimmed_api
 
-    api = generate_trimmed_api(godot_cpp / "gdextension/extension_api.json", profile)
+    interface_path = godot_cpp / "gdextension/gdextension_interface.json"
+    api = generate_trimmed_api(godot_cpp / "gdextension/extension_api-4-7.json", profile)
     api_path = godot_cpp / "gdmp-extension-api.json"
     api_path.write_text(json.dumps(api), encoding="utf-8")
-    generate_bindings(str(api_path), True, output_dir=str(godot_cpp))
+    generate_bindings(str(api_path), str(interface_path), True, output_dir=str(godot_cpp))
 
     workspace = mediapipe / "WORKSPACE"
     contents = workspace.read_text(encoding="utf-8").replace(

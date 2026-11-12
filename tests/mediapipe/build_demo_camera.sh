@@ -27,9 +27,9 @@ extract_verified() {
     tar -xf "$archive" -C "$directory"
 }
 
-revision=e83fd0904c13356ed1d4c3d09f8bb9132bdc6b77
+revision=507ed9d840c01a3c5b2a39af8bb4000bfac30bf5
 extract_verified https://codeload.github.com/godotengine/godot-cpp/tar.gz/$revision \
-    d4c03daf46c8bef4544614182b0762c3e32789151c7f8f44e8eb2053d5cddeba "$inputs/bindings"
+    30da4ac295997061a6af81ae531510efd4e6a86e506eb4466edc0898ef3fe048 "$inputs/bindings"
 extract_verified https://github.com/qigao/salts-base/releases/download/v0.1.3/salts-base-0.1.3-linux-clang-$arch.tar \
     "$sdk_sha" "$inputs/salts-base"
 extract_verified https://github.com/qigao/vcpkg-cache/releases/download/v0.1.3/installed-$arch-linux.tar.xz \

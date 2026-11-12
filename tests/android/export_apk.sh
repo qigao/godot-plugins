@@ -25,7 +25,7 @@ if [[ "$arch" == x86_64 ]]; then
 fi
 
 export XDG_CONFIG_HOME="$work/config" XDG_DATA_HOME="$work/data" XDG_CACHE_HOME="$work/cache"
-install -D "$template" "$XDG_DATA_HOME/godot/export_templates/4.5.2.stable/android_debug.apk"
+install -D "$template" "$XDG_DATA_HOME/godot/export_templates/4.7.2.stable/android_debug.apk"
 mkdir -p "$XDG_CONFIG_HOME/godot"
 keytool -genkeypair -keystore "$work/debug.keystore" -storetype PKCS12 \
   -alias androiddebugkey -storepass android -keypass android -keyalg RSA -keysize 2048 \
@@ -44,7 +44,7 @@ settings = {
     "export/android/debug_keystore_user": "androiddebugkey",
     "export/android/debug_keystore_pass": "android",
 }
-path = Path(os.environ["XDG_CONFIG_HOME"]) / "godot/editor_settings-4.5.tres"
+path = Path(os.environ["XDG_CONFIG_HOME"]) / "godot/editor_settings-4.7.tres"
 path.write_text('[gd_resource type="EditorSettings" format=3]\n\n[resource]\n' +
                 ''.join(f'{key} = {json.dumps(value)}\n' for key, value in settings.items()),
                 encoding="utf-8")

@@ -8,6 +8,26 @@ from zipfile import ZIP_STORED, ZipFile
 from check_bundle import ANDROID_TARGETS, require_16k_load_alignment
 
 
+def check_launcher(aapt, apk):
+    # Godot 4.7 exposes an activity alias that aapt2 badging omits.
+    manifest = subprocess.check_output([aapt, "dump", "xmltree", apk, "--file", "AndroidManifest.xml"], text=True)
+    components = re.findall(r"(?m)^( +)E: (activity(?:-alias)?) \([^\n]*\)\n((?:\1 +[^\n]*\n)*)", manifest)
+    target = "com.godot.game.GodotApp"
+    name = ":name(0x01010003)="
+    launcher_fields = (
+        f'{name}"{target}Launcher"',
+        ":exported(0x01010010)=true",
+        f':targetActivity(0x01010202)="{target}"',
+        f'{name}"android.intent.action.MAIN"',
+        f'{name}"android.intent.category.LAUNCHER"',
+    )
+    if not any(kind == "activity" and f'{name}"{target}"' in body for _, kind, body in components):
+        raise SystemExit("APK does not declare the Godot activity")
+    if not any(kind == "activity-alias" and all(field in body for field in launcher_fields)
+               for _, kind, body in components):
+        raise SystemExit("APK does not declare the exported Godot launcher alias")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("apk", type=Path)
@@ -19,16 +39,17 @@ def main():
 
     subprocess.run([args.build_tools / "apksigner", "verify", "--verbose", args.apk], check=True)
     subprocess.run([args.build_tools / "zipalign", "-c", "-P", "16", "4", args.apk], check=True)
-    badging = subprocess.check_output([args.build_tools / "aapt2", "dump", "badging", args.apk], text=True)
+    aapt = args.build_tools / "aapt2"
+    badging = subprocess.check_output([aapt, "dump", "badging", args.apk], text=True)
     for record in (
         r"^package: name='org\.qigao\.saltscamera' ",
         r"^minSdkVersion:'26'$",
         r"^uses-permission: name='android\.permission\.CAMERA'$",
-        r"^launchable-activity: ",
         rf"^native-code: '{abi}'\s*$",
     ):
         if not re.search(record, badging, re.MULTILINE):
             raise SystemExit(f"APK manifest check failed for {record}\n{badging}")
+    check_launcher(aapt, args.apk)
 
     descriptor = "addons/salts_camera/salts_camera.gdextension"
     with ZipFile(args.apk) as apk, TemporaryDirectory() as scratch:

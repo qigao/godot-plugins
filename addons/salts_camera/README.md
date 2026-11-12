@@ -1,10 +1,10 @@
 # Salts Camera
 
-Salts Camera exposes native camera preview, owned raw frames, and PCM audio playback to Godot 4.5.2. It links the static `Salts::Media` target from the installed SaltsBase v0.1.3 SDK. [Design](../../docs/SALTS-CAMERA-DESIGN.md) · [Acceptance](../../docs/SALTS-CAMERA-ACCEPTANCE.md)
+Salts Camera exposes native camera preview, owned raw frames, and PCM audio playback to Godot 4.7.2. It links the static `Salts::Media` target from the installed SaltsBase v0.1.3 SDK. [Design](../../docs/SALTS-CAMERA-DESIGN.md) · [Acceptance](../../docs/SALTS-CAMERA-ACCEPTANCE.md)
 
 ## Build
 
-Use CMake 3.27+, Ninja, Python 3, Godot 4.5.2, and `godot-cpp` at `e83fd0904c13356ed1d4c3d09f8bb9132bdc6b77`. Extract the SaltsBase v0.1.3 SDK and vcpkg-cache v0.1.3 dependency archive for your target triplet into separate directories. Verify the archives using the published checksums. [Godot](https://github.com/godotengine/godot-builds/releases/tag/4.5.2-stable) · [Bindings](https://github.com/godotengine/godot-cpp/tree/e83fd0904c13356ed1d4c3d09f8bb9132bdc6b77) · [SDK](https://github.com/qigao/salts-base/releases/tag/v0.1.3) · [Dependencies](https://github.com/qigao/vcpkg-cache/releases/tag/v0.1.3)
+Use CMake 3.27+, Ninja, Python 3, Godot 4.7.2, and `godot-cpp` at `507ed9d840c01a3c5b2a39af8bb4000bfac30bf5`. Extract the SaltsBase v0.1.3 SDK and vcpkg-cache v0.1.3 dependency archive for your target triplet into separate directories. Verify the archives using the published checksums. [Godot](https://github.com/godotengine/godot-builds/releases/tag/4.7.2-stable) · [Bindings](https://github.com/godotengine/godot-cpp/tree/507ed9d840c01a3c5b2a39af8bb4000bfac30bf5) · [SDK](https://github.com/qigao/salts-base/releases/tag/v0.1.3) · [Dependencies](https://github.com/qigao/vcpkg-cache/releases/tag/v0.1.3)
 
 | Target | SDK profile | Dependency prefix inside the archive | Toolchain |
 | --- | --- | --- | --- |
@@ -25,12 +25,12 @@ cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ \
   -DGODOT_CPP_DIR=/path/to/godot-cpp \
   '-DCMAKE_PREFIX_PATH=/path/to/salts-base;/path/to/vcpkg_installed/x64-linux' \
-  -DBUILD_TESTING=ON -DGODOT_EXECUTABLE=/path/to/Godot_v4.5.2-stable_linux.x86_64
+  -DBUILD_TESTING=ON -DGODOT_EXECUTABLE=/path/to/Godot_v4.7.2-stable_linux.x86_64
 cmake --build build
 ctest --test-dir build --output-on-failure
 ```
 
-Use the matching compiler paths and dependency prefix on Windows and macOS. On macOS, set `DEVELOPER_DIR` to `/Applications/Xcode_16.4.app/Contents/Developer`. For a build without the test projects, omit `BUILD_TESTING` and `GODOT_EXECUTABLE`. The extension and its runtime libraries are staged under `build/addons/salts_camera/`. Copy that directory to `addons/salts_camera/` in your Godot project and open it with Godot 4.5.2. The generated descriptor lists the platform built by that configure.
+Use the matching compiler paths and dependency prefix on Windows and macOS. On macOS, set `DEVELOPER_DIR` to `/Applications/Xcode_16.4.app/Contents/Developer`. For a build without the test projects, omit `BUILD_TESTING` and `GODOT_EXECUTABLE`. The extension and its runtime libraries are staged under `build/addons/salts_camera/`. Copy that directory to `addons/salts_camera/` in your Godot project and open it with Godot 4.7.2. The generated descriptor lists the platform built by that configure.
 
 On Linux, cross-build the Android add-on with the NDK at the path recorded in the published SaltsBase SDK. The example targets ARM64. For x64, use the matching SDK and dependency prefixes, set `ANDROID_ABI=x86_64`, and pass `x86_64` after the NDK path to the bundle checker.
 
@@ -48,7 +48,7 @@ python3 tests/android/check_bundle.py build-android "$ndk"
 
 The Android check inspects the staged `.gdextension`, target shared objects and their runtime dependencies. For your Android export preset, enable the matching architecture, use a minimum SDK of 26 or higher, and enable **Camera** under **Permissions**.
 
-Android CI publishes signed `salts-camera-debug-arm64` and `salts-camera-debug-x86_64` test APKs for camera and mode selection, live preview, and an audio output test. The sample uses the Godot 4.5.2 debug template and sets API 26 through Godot's prebuilt manifest export hook. To export it locally with Android build-tools 35.0.0, JDK 17, and `readelf`, run the following command after extracting `templates/android_debug.apk` from the official 4.5.2 export-template archive.
+Android CI publishes signed `salts-camera-debug-arm64` and `salts-camera-debug-x86_64` test APKs for camera and mode selection, live preview, and an audio output test. The sample uses the Godot 4.7.2 debug template and sets API 26 through Godot's prebuilt manifest export hook. To export it locally with Android build-tools 35.0.0, JDK 17, and `readelf`, run the following command after extracting `templates/android_debug.apk` from the official 4.7.2 export-template archive.
 
 ```sh
 bash tests/android/export_apk.sh build-android /path/to/godot /path/to/android_debug.apk "$ANDROID_HOME" "$JAVA_HOME"
