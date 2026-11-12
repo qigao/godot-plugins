@@ -1,6 +1,8 @@
 name: GDMP with MediaPipe SDK
 
 on:
+  push:
+    branches: [ci/gdmp-task-delegates]
   workflow_dispatch:
     inputs:
       sdk_tag:
@@ -85,8 +87,8 @@ jobs:
         env:
           TARGET: ${{ matrix.target }}
           ARCH: ${{ matrix.arch }}
-          SDK_TAG: ${{ inputs.sdk_tag }}
-          SDK_CHECKSUMS_SHA: ${{ inputs.sdk_checksums_sha256 }}
+          SDK_TAG: ${{ inputs.sdk_tag || 'sdk-v1.2.2' }}
+          SDK_CHECKSUMS_SHA: ${{ inputs.sdk_checksums_sha256 || 'e4943aeb2e8f58cf2e7fb4bd93d2404f1924f8996210be531bdf0b7d2523984d' }}
           ANDROID_ABI: ${{ matrix.android_abi }}
           OSX_ARCH: ${{ matrix.osx_arch }}
           MINGW_TOOLCHAIN: ${{ steps.mingw.outputs.toolchain-file }}
@@ -141,6 +143,7 @@ jobs:
           GODOT_SHA: ${{ matrix.godot_sha }}
           GODOT_BIN: ${{ matrix.godot_bin }}
           EGL_PLATFORM: surfaceless
+          LIBGL_ALWAYS_SOFTWARE: '1'
         run: |
           inputs="$RUNNER_TEMP/gdmp"
           curl -fsSL --retry 3 "https://github.com/godotengine/godot-builds/releases/download/4.5.2-stable/$GODOT_ASSET" \
