@@ -114,8 +114,11 @@ jobs:
           bindings=e83fd0904c13356ed1d4c3d09f8bb9132bdc6b77
           download "https://codeload.github.com/godotengine/godot-cpp/tar.gz/$bindings" \
             d4c03daf46c8bef4544614182b0762c3e32789151c7f8f44e8eb2053d5cddeba "$inputs/godot-cpp.tar.gz"
-          tar -xzf "$inputs/$sdk" -C "$inputs/mediapipe"
-          tar -xzf "$inputs/godot-cpp.tar.gz" --strip-components=1 -C "$inputs/bindings"
+          (
+            cd "$inputs"
+            tar -xzf "$sdk" -C mediapipe
+            tar -xzf godot-cpp.tar.gz --strip-components=1 -C bindings
+          )
 
           args=()
           case "$TARGET" in
@@ -127,7 +130,8 @@ jobs:
             windows) args+=("-DCMAKE_TOOLCHAIN_FILE=$MINGW_TOOLCHAIN") ;;
           esac
           cmake -S src/gdmp -B build-gdmp-sdk -G Ninja -DCMAKE_BUILD_TYPE=Release \
-            "-DCMAKE_PREFIX_PATH=$inputs/mediapipe" "-DGODOT_CPP_DIR=$inputs/bindings" "${args[@]}"
+            "-DMediaPipe_DIR=$inputs/mediapipe/lib/cmake/MediaPipe" \
+            "-DGODOT_CPP_DIR=$inputs/bindings" "${args[@]}"
           cmake --build build-gdmp-sdk --parallel 4
       - name: Run face, hand, and pose inference in Godot
         if: matrix.target != 'android'
