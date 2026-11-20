@@ -1,0 +1,215 @@
+name: Salts Network CI
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/salts-network.yml'
+      - 'addons/salts_http_client/**'
+      - 'addons/salts_mqtt_client/**'
+      - 'src/salts_network/**'
+      - 'tests/salts_network/**'
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/salts-network.yml'
+      - 'addons/salts_http_client/**'
+      - 'addons/salts_mqtt_client/**'
+      - 'src/salts_network/**'
+      - 'tests/salts_network/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.target }} ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux
+            arch: x64
+            runner: ubuntu-24.04
+            sdk: linux-clang-x64
+            host: linux-x64
+            godot_asset: Godot_v4.7.2-stable_linux.x86_64.zip
+            godot_sha: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+            godot_bin: Godot_v4.7.2-stable_linux.x86_64
+          - target: linux
+            arch: arm64
+            runner: ubuntu-24.04-arm
+            sdk: linux-clang-arm64
+            host: linux-arm64
+            godot_asset: Godot_v4.7.2-stable_linux.arm64.zip
+            godot_sha: 5dd0d86405cf7e8adf79fb6377b38ba682a2846cb378ffe5364f38c01ad29b9d
+            godot_bin: Godot_v4.7.2-stable_linux.arm64
+          - target: macos
+            arch: arm64
+            runner: macos-15
+            sdk: macos-clang-arm64
+            host: macos-arm64
+            godot_asset: Godot_v4.7.2-stable_macos.universal.zip
+            godot_sha: c58a24e31d720be9d62f60cb5627c4e695fb72f21b0cfe1bc9ccaa9a3b3ba63e
+            godot_bin: Godot.app/Contents/MacOS/Godot
+          - target: windows
+            arch: x64
+            runner: windows-2025
+            sdk: windows-llvm-mingw-x64
+            host: windows-x64
+            godot_asset: Godot_v4.7.2-stable_win64.exe.zip
+            godot_sha: 731980f9608d61333e5baf54a2ef17210acc7a538446c0cb9969f002aca1e953
+            godot_bin: Godot_v4.7.2-stable_win64_console.exe
+          - target: windows
+            arch: arm64
+            runner: windows-11-arm
+            sdk: windows-llvm-mingw-arm64
+            host: windows-arm64
+            godot_asset: Godot_v4.7.2-stable_windows_arm64.exe.zip
+            godot_sha: 2d206e0b1d2366eb3508971c670c52333dcd7218b818102d77ca7ceaa86892ba
+            godot_bin: Godot_v4.7.2-stable_windows_arm64_console.exe
+          - target: android
+            arch: x64
+            runner: ubuntu-24.04
+            sdk: android-x64
+            host: linux-x64
+            android_abi: x86_64
+          - target: android
+            arch: arm64
+            runner: ubuntu-24.04
+            sdk: android-arm64
+            host: linux-x64
+            android_abi: arm64-v8a
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: qigao/vcpkg-cache/.github/actions/setup-llvm-mingw@v0.1.8
+        id: mingw
+        if: matrix.target == 'windows'
+        with:
+          target: ${{ matrix.arch }}
+          build-type: toolchain-only
+      - name: Build and test the network extensions
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+          SDK_PROFILE: ${{ matrix.sdk }}
+          HOST_PROFILE: ${{ matrix.host }}
+          ANDROID_ABI: ${{ matrix.android_abi }}
+          GODOT_ASSET: ${{ matrix.godot_asset }}
+          GODOT_SHA: ${{ matrix.godot_sha }}
+          GODOT_BIN: ${{ matrix.godot_bin }}
+          MINGW_TOOLCHAIN: ${{ steps.mingw.outputs.toolchain-file }}
+        run: |
+          inputs="$RUNNER_TEMP/salts-network"
+          mkdir -p "$inputs"/{bindings,flowie,re2c,lemon}
+          checksum=(sha256sum -c -)
+          if [[ "$TARGET" == macos ]]; then
+            checksum=(shasum -a 256 -c -)
+          fi
+          download() {
+            local url=$1 sha=$2 file=$3
+            curl -fsSL --retry 3 "$url" -o "$file"
+            printf '%s  %s\n' "$sha" "$file" | "${checksum[@]}"
+          }
+          sdk() {
+            local repo=$1 version=$2 profile=$3
+            local base="https://github.com/qigao/$repo/releases/download/v$version"
+            local archive="$repo-$version-$profile.tar"
+            curl -fsSL --retry 3 "$base/SHA256SUMS" -o "$inputs/$repo.sha256"
+            local sha
+            sha=$(awk -v archive="$archive" '$2 == archive { print $1 }' "$inputs/$repo.sha256")
+            download "$base/$archive" "$sha" "$inputs/$archive"
+            mkdir "$inputs/$repo"
+            tar -xf "$inputs/$archive" -C "$inputs/$repo"
+          }
+
+          bindings=507ed9d840c01a3c5b2a39af8bb4000bfac30bf5
+          flowie=3cdfbd9ff42668c873a26e5fb1f307870c74ff3a
+          cache=https://github.com/qigao/vcpkg-cache/releases/download/v0.1.8
+          download "https://codeload.github.com/godotengine/godot-cpp/tar.gz/$bindings" \
+            30da4ac295997061a6af81ae531510efd4e6a86e506eb4466edc0898ef3fe048 "$inputs/godot-cpp.tar.gz"
+          download "https://codeload.github.com/qigao/flowie/tar.gz/$flowie" \
+            b3d36062c1e18eea23b9c00788a31dbcff58dd09d60f0da9dd1770490df1fdc7 "$inputs/flowie.tar.gz"
+          download "$cache/Qigao.Re2c.Binary.4.6.7.nupkg" \
+            fe3c64ef3c25a28a9e5143bf2e85e3a7f25691f9bf47bec490f3e6be8e461305 "$inputs/re2c.nupkg"
+          download "$cache/Qigao.Lemon.Binary.1.0.0.nupkg" \
+            92539e4d99c38657fa69f0bdaea73be2b35f6572cb6a9264731ae58a6da073cd "$inputs/lemon.nupkg"
+          tar -xzf "$inputs/godot-cpp.tar.gz" --strip-components=1 -C "$inputs/bindings"
+          tar -xzf "$inputs/flowie.tar.gz" --strip-components=1 -C "$inputs/flowie"
+          (cd "$inputs/re2c" && cmake -E tar xf ../re2c.nupkg)
+          (cd "$inputs/lemon" && cmake -E tar xf ../lemon.nupkg)
+          re2c="$inputs/re2c/tools/$HOST_PROFILE/bin/re2c"
+          lemon="$inputs/lemon/tools/$HOST_PROFILE/bin/lemon"
+          if [[ "$TARGET" == windows ]]; then
+            re2c="$re2c.exe"
+            lemon="$lemon.exe"
+          else
+            chmod +x "$re2c" "$lemon"
+          fi
+
+          cnet_profile="${SDK_PROFILE/-clang/}"
+          cnet_profile="${cnet_profile/-llvm-mingw/}"
+          sdk salts-base 0.1.10 "$SDK_PROFILE"
+          sdk cmeta 0.1.10 "$SDK_PROFILE"
+          sdk salts-cnet 0.1.18 "$cnet_profile"
+          sdk salts-utils 0.1.8 "$SDK_PROFILE"
+          sdk chttp 0.1.4 "$SDK_PROFILE"
+
+          args=()
+          case "$TARGET" in
+            linux) args+=(-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++) ;;
+            macos) args+=(-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+                         -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0) ;;
+            windows) args+=("-DCMAKE_TOOLCHAIN_FILE=$MINGW_TOOLCHAIN") ;;
+            android)
+              ndk="$ANDROID_HOME/ndk/27.3.13750724"
+              args+=("-DCMAKE_TOOLCHAIN_FILE=$ndk/build/cmake/android.toolchain.cmake"
+                     "-DANDROID_ABI=$ANDROID_ABI" -DANDROID_PLATFORM=android-26 -DANDROID_STL=c++_static)
+              ;;
+          esac
+          if [[ "$TARGET" != android ]]; then
+            download "https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/$GODOT_ASSET" \
+              "$GODOT_SHA" "$inputs/godot.zip"
+            mkdir "$inputs/engine"
+            (cd "$inputs/engine" && cmake -E tar xf ../godot.zip)
+            args+=(-DBUILD_TESTING=ON "-DGODOT_EXECUTABLE=$inputs/engine/$GODOT_BIN")
+          fi
+
+          cmake -S src/salts_network -B build-network -G Ninja -DCMAKE_BUILD_TYPE=Release \
+            "-DGODOT_CPP_DIR=$inputs/bindings" "-DFLOWIE_SOURCE_DIR=$inputs/flowie" \
+            "-DSALTS_BASE_ROOT=$inputs/salts-base" \
+            "-DCMAKE_PREFIX_PATH=$inputs/cmeta;$inputs/salts-cnet;$inputs/salts-utils;$inputs/chttp" \
+            "-DRE2C_EXECUTABLE=$re2c" "-DLEMON_EXECUTABLE=$lemon" \
+            "-DLEMPAR=$inputs/lemon/tools/$HOST_PROFILE/share/lemon/lempar.c" "${args[@]}"
+          cmake --build build-network --parallel 4
+          if [[ "$TARGET" != android ]]; then
+            ctest --test-dir build-network --output-on-failure --no-tests=error
+          fi
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: salts-network-build-${{ matrix.target }}-${{ matrix.arch }}
+          path: build-network/addons
+          if-no-files-found: error
+
+  package:
+    name: Package the seven-platform add-ons
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v8.0.1
+        with:
+          pattern: salts-network-build-*
+          path: artifacts
+      - run: python3 src/salts_network/package_addons.py artifacts dist
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: salts-network-godot-4.7.2
+          path: dist
+          if-no-files-found: error

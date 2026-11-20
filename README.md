@@ -24,3 +24,7 @@ An in-tree import of the GDMP Godot add-on for MediaPipe graphs and tasks. It us
 ## Salts QR Code
 
 Create QR Code images from text or bytes and decode them from Godot images using ZXing-C++. [Build and API](addons/salts_qrcode/README.md)
+
+## Salts HTTP and MQTT clients
+
+Godot networking nodes backed by CHttp and Flowie. [HTTP/1.1, HTTP/2 and JSON-RPC](addons/salts_http_client/README.md) · [MQTT](addons/salts_mqtt_client/README.md)
