@@ -250,7 +250,7 @@ public:
 			if (!root.begins_with("$") || root.contains("/") || root.contains("+") || root.contains("#")) {
 				return SALTS_EINVAL;
 			}
-			filters.push_back((root + "/#").utf8());
+			filters.push_back((root + String("/#")).utf8());
 		}
 		std::vector<flowie_mqtt_client_topic_handler_t> handlers;
 		handlers.reserve(filters.size());

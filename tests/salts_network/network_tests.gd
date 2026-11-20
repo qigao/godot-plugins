@@ -37,7 +37,9 @@ func _run() -> void:
 	http.rpc_completed.connect(func(id, result): responses[id] = result)
 	http.poll_failed.connect(func(status): check(false, "HTTP poll failed: %s" % status))
 	mqtt.operation_completed.connect(func(operation, status, ack): operations[operation] = [status, ack])
-	mqtt.message_received.connect(func(topic, payload, metadata): messages.append([topic, payload, metadata]))
+	mqtt.message_received.connect(func(topic, payload, metadata):
+		check(OS.get_thread_caller_id() == OS.get_main_thread_id(), "MQTT signal thread")
+		messages.append([topic, payload, metadata]))
 	mqtt.connection_failed.connect(func(status, reason):
 		check(false, "MQTT connection failed: %s, %s" % [status, reason]))
 
@@ -99,7 +101,12 @@ func test_http(ports: PackedStringArray) -> void:
 func test_mqtt(port: int, version: int) -> void:
 	operations.clear()
 	messages.clear()
-	check(mqtt.open("127.0.0.1", port, "godot-test", SaltsMqttClient.TCP, version) == 0,
+	var options := {}
+	var topic := "godot/test"
+	if version == SaltsMqttClient.MQTT_5:
+		options["system_topic_roots"] = PackedStringArray(["$GODOT"])
+		topic = "$GODOT/test"
+	check(mqtt.open("127.0.0.1", port, "godot-test", SaltsMqttClient.TCP, version, options) == 0,
 		"MQTT CONNECT admission")
 	if not await wait_for(func(): return operations.has("connect")):
 		check(false, "MQTT CONNACK missing")
@@ -107,7 +114,6 @@ func test_mqtt(port: int, version: int) -> void:
 		return
 	check(mqtt.is_connected() and operations["connect"][0] == 0
 		and operations["connect"][1]["reason_code"] == 0, "MQTT CONNACK")
-	var topic := "godot/test"
 	var payload := PackedByteArray([1, 0, 255])
 	check(mqtt.subscribe(topic, 1) == 0, "MQTT SUBSCRIBE admission")
 	if not await wait_for(func(): return operations.has("subscribe")):

@@ -121,10 +121,14 @@ jobs:
             local archive="$repo-$version-$profile.tar"
             curl -fsSL --retry 3 "$base/SHA256SUMS" -o "$inputs/$repo.sha256"
             local sha
-            sha=$(awk -v archive="$archive" '$2 == archive { print $1 }' "$inputs/$repo.sha256")
+            sha=$(awk -v archive="$archive" '{ sub(/\r$/, "", $2); if ($2 == archive) print $1 }' "$inputs/$repo.sha256")
+            if [[ ! "$sha" =~ ^[[:xdigit:]]{64}$ ]]; then
+              printf 'Missing or ambiguous SHA-256 for %s\n' "$archive" >&2
+              return 1
+            fi
             download "$base/$archive" "$sha" "$inputs/$archive"
             mkdir "$inputs/$repo"
-            tar -xf "$inputs/$archive" -C "$inputs/$repo"
+            (cd "$inputs" && tar -xf "$archive" -C "$repo")
           }
 
           bindings=507ed9d840c01a3c5b2a39af8bb4000bfac30bf5
@@ -138,8 +142,11 @@ jobs:
             fe3c64ef3c25a28a9e5143bf2e85e3a7f25691f9bf47bec490f3e6be8e461305 "$inputs/re2c.nupkg"
           download "$cache/Qigao.Lemon.Binary.1.0.0.nupkg" \
             92539e4d99c38657fa69f0bdaea73be2b35f6572cb6a9264731ae58a6da073cd "$inputs/lemon.nupkg"
-          tar -xzf "$inputs/godot-cpp.tar.gz" --strip-components=1 -C "$inputs/bindings"
-          tar -xzf "$inputs/flowie.tar.gz" --strip-components=1 -C "$inputs/flowie"
+          (
+            cd "$inputs"
+            tar -xzf godot-cpp.tar.gz --strip-components=1 -C bindings
+            tar -xzf flowie.tar.gz --strip-components=1 -C flowie
+          )
           (cd "$inputs/re2c" && cmake -E tar xf ../re2c.nupkg)
           (cd "$inputs/lemon" && cmake -E tar xf ../lemon.nupkg)
           re2c="$inputs/re2c/tools/$HOST_PROFILE/bin/re2c"
