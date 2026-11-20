@@ -52,6 +52,8 @@ set(GODOTCPP_BUILD_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/godot-cpp-profile.json")
 set(GODOTCPP_API_VERSION 4.7)
 set(GODOTCPP_TARGET template_release)
 set(GODOTCPP_SYSTEM_HEADERS ON)
+# Godot 4.7 uses mem_alloc2/mem_free2; the deprecated names collide with SaltsBase.
+set(GODOTCPP_DEPRECATED OFF)
 add_subdirectory("${GODOT_CPP_DIR}" godot-cpp EXCLUDE_FROM_ALL)
 
 # Use Flowie's host grammar generation, protocol and vendored Monocypher targets.
